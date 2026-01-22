@@ -16,6 +16,7 @@ export interface Socio {
   nombreTutor: string;
   telefonoTutor: string;
   activo: boolean;
+  fechaInscripcion: string;
 }
 
 export interface Pago {
