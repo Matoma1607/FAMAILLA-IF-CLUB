@@ -1,7 +1,7 @@
 
 import { Socio, Pago, Entrenamiento, Asistencia } from '../types';
 
-export const GAS_URL = 'https://script.google.com/macros/s/AKfycbzTRMh7S1kFH8Advp2HlVMXP3fG9AE8YQonNevTC29QI_NIny63RmjQWjW9slq89c-H/exec';
+export const GAS_URL = 'https://script.google.com/macros/s/AKfycbxS4rwt5_N9cVbUdYd7-7P3M7YDjylSb71bFMgmNsMyLWVgm10ioM2Q2NUmRjkwvdft/exec';
 
 const getUserToken = () => {
   const session = localStorage.getItem('peques_session');
@@ -22,8 +22,7 @@ const request = async (action: string, data?: any) => {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error(`Error ${response.status} en ${action}:`, errorData.error || response.statusText);
-        return null;
+        throw new Error(errorData.error || `Error del servidor (${response.status})`);
       }
       return await response.json();
     } else {
@@ -41,18 +40,26 @@ const request = async (action: string, data?: any) => {
         body: JSON.stringify(payload)
       });
       
-      return { success: true };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error al guardar (${response.status})`);
+      }
+      
+      return await response.json();
     }
-  } catch (error) {
-    console.error(`Error de red/GAS [${action}]:`, error);
-    return null;
+  } catch (error: any) {
+    console.error(`Error GAS [${action}]:`, error.message);
+    throw error;
   }
 };
 
 export const getSocios = async (): Promise<Socio[]> => {
-  const res = await request('obtenerSocios');
-  if (!res) return [];
-  return Array.isArray(res) ? res : [];
+  try {
+    const res = await request('obtenerSocios');
+    return Array.isArray(res) ? res : [];
+  } catch (e) {
+    return [];
+  }
 };
 
 export const saveSocio = async (socio: any) => {
@@ -65,8 +72,12 @@ export const deleteSocio = async (id: string) => {
 };
 
 export const getPagos = async (): Promise<Pago[]> => {
-  const res = await request('obtenerPagos');
-  return Array.isArray(res) ? res : [];
+  try {
+    const res = await request('obtenerPagos');
+    return Array.isArray(res) ? res : [];
+  } catch (e) {
+    return [];
+  }
 };
 
 export const registrarPago = async (pago: any) => {
@@ -83,8 +94,12 @@ export const deletePago = async (id: string) => {
 };
 
 export const getEntrenamientos = async (): Promise<Entrenamiento[]> => {
-  const res = await request('obtenerEntrenamientos');
-  return Array.isArray(res) ? res : [];
+  try {
+    const res = await request('obtenerEntrenamientos');
+    return Array.isArray(res) ? res : [];
+  } catch (e) {
+    return [];
+  }
 };
 
 export const saveEntrenamiento = async (ent: any) => {
@@ -97,8 +112,12 @@ export const deleteEntrenamiento = async (id: string) => {
 };
 
 export const getAsistencia = async (): Promise<Asistencia[]> => {
-  const res = await request('obtenerAsistencia');
-  return Array.isArray(res) ? res : [];
+  try {
+    const res = await request('obtenerAsistencia');
+    return Array.isArray(res) ? res : [];
+  } catch (e) {
+    return [];
+  }
 };
 
 export const saveAsistencia = async (batch: any[]) => {

@@ -20,14 +20,13 @@ const Socios = () => {
     setError(null);
     try {
       const data = await getSocios();
-      if (data && Array.isArray(data)) {
-        setSocios(data);
-      } else {
-        setError("No se recibió una lista válida de alumnos. Revisa los permisos de tu cuenta.");
+      setSocios(data);
+      if (data.length === 0) {
+        // No necesariamente un error, pero lo logueamos internamente
+        console.log("No se encontraron socios o falta permiso.");
       }
-    } catch (e) { 
-      console.error(e);
-      setError("Error de conexión con el servidor de Famaillá IF.");
+    } catch (e: any) { 
+      setError(e.message || "Error de conexión con el servidor.");
     }
     setLoading(false);
   };
@@ -39,16 +38,12 @@ const Socios = () => {
     setSaving(true);
     setError(null);
     try {
-      const result = await saveSocio(editingSocio);
-      if (result) {
-        setIsModalOpen(false);
-        setEditingSocio(null);
-        await fetchSocios();
-      } else {
-        setError("Error al guardar. Tu usuario podría no tener permisos de escritura.");
-      }
-    } catch (err) {
-      setError("Error crítico al intentar guardar en la base de datos.");
+      await saveSocio(editingSocio);
+      setIsModalOpen(false);
+      setEditingSocio(null);
+      await fetchSocios();
+    } catch (err: any) {
+      setError(err.message || "No tienes permiso para guardar o hubo un error de red.");
     } finally {
       setSaving(false);
     }
@@ -56,8 +51,12 @@ const Socios = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Confirmas la eliminación definitiva?")) {
-      await deleteSocio(id);
-      fetchSocios();
+      try {
+        await deleteSocio(id);
+        fetchSocios();
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
   };
 
@@ -100,9 +99,10 @@ const Socios = () => {
         <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-start space-x-3 animate-fade-in">
           <AlertCircle className="text-rose-500 shrink-0 mt-0.5" size={20} />
           <div>
-            <p className="text-rose-700 font-bold text-sm">Problema detectado</p>
+            <p className="text-rose-700 font-bold text-sm">Aviso del Servidor</p>
             <p className="text-rose-600 text-xs">{error}</p>
           </div>
+          <button onClick={() => setError(null)} className="ml-auto text-rose-400"><X size={16} /></button>
         </div>
       )}
 
@@ -167,7 +167,7 @@ const Socios = () => {
             {loading ? (
               <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
             ) : filteredSocios.length === 0 ? (
-              <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">{error ? "Error al cargar datos" : "No hay jugadores registrados"}</td></tr>
+              <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">No hay jugadores registrados</td></tr>
             ) : filteredSocios.map(socio => (
               <tr key={socio.id} className="hover:bg-slate-50 transition-all">
                 <td className="px-8 py-5">
