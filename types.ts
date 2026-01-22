@@ -25,6 +25,7 @@ export interface Pago {
   anio: number;
   monto: number;
   estado: 'PAGADO' | 'PENDIENTE';
+  nombreSocio?: string;
 }
 
 export interface Entrenamiento {
