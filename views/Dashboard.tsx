@@ -7,9 +7,8 @@ import {
   DollarSign, 
   BrainCircuit,
   Loader2,
-  Database,
-  CheckCircle2,
-  PlusCircle
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -17,13 +16,13 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
   ResponsiveContainer, 
   Cell 
 } from 'recharts';
-import { getSocios, getPagos, GAS_URL } from '../services/dataService.ts';
-import { getClubInsights } from '../services/geminiService.ts';
+import { getSocios, getPagos, GAS_URL } from '../services/dataService';
+import { getClubInsights } from '../services/geminiService';
 import { Link } from 'react-router-dom';
+import { Socio, Pago } from '../types';
 
 const StatCard = ({ title, value, icon: Icon, colorClass, trend }: any) => (
   <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
@@ -45,11 +44,14 @@ const StatCard = ({ title, value, icon: Icon, colorClass, trend }: any) => (
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, activos: 0, deudores: 0, recaudacion: 0 });
+  const [vencidos, setVencidos] = useState<Socio[]>([]);
   const [insights, setInsights] = useState("");
   const [insightsLoading, setInsightsLoading] = useState(false);
 
-  const isConfigured = !GAS_URL.includes('TU_ID_AQUI');
-  const COLORS = ['#916230', '#2f364a', '#c6cde3', '#475569'];
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const now = new Date();
+  const mesActual = meses[now.getMonth()];
+  const anioActual = now.getFullYear();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,23 +59,40 @@ const Dashboard = () => {
       try {
         const socios = await getSocios();
         const pagos = await getPagos();
-        const deudoresCount = (pagos || []).filter(p => p.estado === 'PENDIENTE').length;
+        
+        // Calcular deudores del mes actual
+        const listaDeudores = socios.filter(s => {
+          const pago = pagos.find(p => 
+            String(p.socioId) === String(s.id) && 
+            p.mes === mesActual && 
+            p.anio === anioActual &&
+            p.estado === 'PAGADO'
+          );
+          return !pago;
+        });
+
         const recaudacion = (pagos || []).filter(p => p.estado === 'PAGADO').reduce((acc, curr) => acc + (Number(curr.monto) || 0), 0);
 
         setStats({
           total: (socios || []).length,
           activos: (socios || []).filter(s => s.activo).length,
-          deudores: deudoresCount,
+          deudores: listaDeudores.length,
           recaudacion: recaudacion
         });
+        
+        setVencidos(listaDeudores.slice(0, 5)); // Mostrar solo los primeros 5 en el dashboard
 
         if (socios && socios.length > 0) {
           setInsightsLoading(true);
-          const aiInsights = await getClubInsights({ clubName: "Famaillá IF", sociosCount: socios.length, deudoresCount, recaudacion });
-          setInsights(aiInsights);
+          // La función ahora siempre devuelve un string
+          const aiInsights = await getClubInsights({ 
+            clubName: "Famaillá IF", 
+            sociosCount: socios.length, 
+            deudoresCount: listaDeudores.length, 
+            recaudacion 
+          });
+          setInsights(aiInsights || "Análisis no disponible.");
           setInsightsLoading(false);
-        } else {
-          setInsights("¡Base de Famaillá IF conectada! Agrega a tu primer socio para empezar el análisis.");
         }
       } catch (err) {
         console.error(err);
@@ -82,43 +101,51 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  if (loading) return <div className="flex flex-col items-center justify-center h-64 space-y-4"><Loader2 className="w-8 h-8 text-primary animate-spin" /><p className="text-slate-500 animate-pulse font-medium">Sincronizando con Famaillá IF Database...</p></div>;
+  if (loading) return <div className="flex flex-col items-center justify-center h-64 space-y-4"><Loader2 className="w-8 h-8 text-primary animate-spin" /><p className="text-slate-500 font-medium italic">Sincronizando con Famaillá IF Database...</p></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-secondary">Panel de Control</h2>
-          <p className="text-slate-500">Estado institucional de Famaillá IF.</p>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold text-secondary">Panel de Control</h2>
+        <p className="text-slate-500">Resumen institucional de Famaillá IF - {mesActual} {anioActual}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Alumnos" value={stats.total} icon={Users} colorClass="bg-primary" trend={stats.total > 0 ? "Actualizado" : "Sin datos"} />
+        <StatCard title="Total Alumnos" value={stats.total} icon={Users} colorClass="bg-primary" trend="Sincronizado" />
         <StatCard title="Plantel Activo" value={stats.activos} icon={TrendingUp} colorClass="bg-secondary" />
-        <StatCard title="Pendientes Cobro" value={stats.deudores} icon={AlertCircle} colorClass="bg-amber-600" />
-        <StatCard title="Caja Mensual" value={`$${stats.recaudacion.toLocaleString()}`} icon={DollarSign} colorClass="bg-emerald-600" />
+        <StatCard title="Vencidos este mes" value={stats.deudores} icon={AlertCircle} colorClass="bg-rose-600" />
+        <StatCard title="Caja Total" value={`$${stats.recaudacion.toLocaleString()}`} icon={DollarSign} colorClass="bg-emerald-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-accent shadow-sm">
-          <h3 className="text-lg font-bold text-secondary mb-6">Distribución por Categorías</h3>
-          <div className="h-64">
-            {stats.total > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{name: 'Cebollitas', v: 30}, {name: 'Pre-Decima', v: 45}, {name: 'Decima', v: 25}]}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Bar dataKey="v" radius={[6, 6, 0, 0]}>
-                    <Cell fill="#916230" /><Cell fill="#2f364a" /><Cell fill="#c6cde3" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-secondary mb-6">Alertas de Vencimiento</h3>
+            {vencidos.length > 0 ? (
+              <div className="space-y-3">
+                {vencidos.map(s => (
+                  <div key={s.id} className="flex items-center justify-between p-4 bg-rose-50/50 rounded-xl border border-rose-100">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center font-bold text-xs">
+                        <Clock size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">{s.nombre} {s.apellido}</p>
+                        <p className="text-[10px] text-rose-600 font-bold uppercase">{s.categoria}</p>
+                      </div>
+                    </div>
+                    <Link to="/pagos" className="p-2 text-rose-400 hover:text-rose-600 transition-colors">
+                      <ChevronRight size={20} />
+                    </Link>
+                  </div>
+                ))}
+                <Link to="/socios" className="block text-center text-xs font-bold text-primary hover:underline pt-2 uppercase tracking-widest">
+                  Ver todos los deudores
+                </Link>
+              </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-slate-300 border-2 border-dashed border-accent rounded-xl">
-                <Users size={48} className="mb-2 opacity-20" />
-                <p>Esperando registro de alumnos</p>
+              <div className="text-center py-10">
+                <p className="text-slate-400 text-sm italic">¡Excelente! No hay vencimientos pendientes este mes.</p>
               </div>
             )}
           </div>
@@ -127,13 +154,13 @@ const Dashboard = () => {
         <div className="bg-secondary p-6 rounded-2xl shadow-xl text-white">
           <div className="flex items-center space-x-2 mb-4">
             <BrainCircuit size={24} className="text-primary" />
-            <h3 className="text-lg font-bold tracking-tight">AI Advisor: Famaillá IF</h3>
+            <h3 className="text-lg font-bold tracking-tight">AI Advisor</h3>
           </div>
           <div className="bg-white/5 backdrop-blur-md rounded-xl p-5 min-h-[160px] border border-white/10">
             {insightsLoading ? (
               <div className="flex flex-col items-center justify-center h-32 space-y-2">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                <p className="text-xs text-accent">Generando reporte estratégico...</p>
+                <p className="text-xs text-accent italic">Analizando finanzas...</p>
               </div>
             ) : (
               <p className="text-slate-100 text-sm leading-relaxed italic">

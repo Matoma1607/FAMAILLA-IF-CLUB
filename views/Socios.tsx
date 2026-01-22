@@ -1,13 +1,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Search, Plus, Filter, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw
+  Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, CheckCircle, Clock
 } from 'lucide-react';
-import { getSocios, saveSocio, deleteSocio } from '../services/dataService';
-import { Socio, Category } from '../types';
+import { getSocios, saveSocio, deleteSocio, getPagos } from '../services/dataService';
+import { Socio, Category, Pago } from '../types';
 
 const Socios = () => {
   const [socios, setSocios] = useState<Socio[]>([]);
+  const [pagos, setPagos] = useState<Pago[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,23 +16,26 @@ const Socios = () => {
   const [editingSocio, setEditingSocio] = useState<Partial<Socio> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSocios = async () => {
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const now = new Date();
+  const mesActual = meses[now.getMonth()];
+  const anioActual = now.getFullYear();
+
+  const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getSocios();
-      setSocios(data || []);
-      if (!data || data.length === 0) {
-        console.log("Carga completa: La lista de alumnos está vacía.");
-      }
+      const [dataSocios, dataPagos] = await Promise.all([getSocios(), getPagos()]);
+      setSocios(dataSocios || []);
+      setPagos(dataPagos || []);
     } catch (e: any) { 
-      console.error("Error en fetchSocios:", e);
+      console.error("Error en fetchData:", e);
       setError(`Falla de servidor: ${e.message}`);
     }
     setLoading(false);
   };
 
-  useEffect(() => { fetchSocios(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,10 +45,8 @@ const Socios = () => {
       await saveSocio(editingSocio);
       setIsModalOpen(false);
       setEditingSocio(null);
-      // Pequeña espera para que Google Sheets procese
-      setTimeout(() => fetchSocios(), 500);
+      setTimeout(() => fetchData(), 500);
     } catch (err: any) {
-      console.error("Error en handleSubmit:", err);
       setError(`Error al guardar: ${err.message}`);
     } finally {
       setSaving(false);
@@ -55,11 +57,21 @@ const Socios = () => {
     if (window.confirm("¿Confirmas la eliminación definitiva?")) {
       try {
         await deleteSocio(id);
-        fetchSocios();
+        fetchData();
       } catch (err: any) {
         setError(err.message);
       }
     }
+  };
+
+  const getPaymentStatus = (socioId: string) => {
+    const pago = pagos.find(p => 
+      String(p.socioId) === String(socioId) && 
+      p.mes === mesActual && 
+      p.anio === anioActual &&
+      p.estado === 'PAGADO'
+    );
+    return !!pago;
   };
 
   const filteredSocios = socios.filter(s => 
@@ -77,14 +89,13 @@ const Socios = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Plantel de Jugadores</h2>
-          <p className="text-slate-500">Administra el listado oficial de FAMAILLA IF.</p>
+          <p className="text-slate-500">Control de estados y pagos de {mesActual} {anioActual}.</p>
         </div>
         <div className="flex space-x-2">
           <button 
-            onClick={fetchSocios}
+            onClick={fetchData}
             disabled={loading}
             className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-all shadow-sm disabled:opacity-50"
-            title="Refrescar lista"
           >
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -99,7 +110,7 @@ const Socios = () => {
       </div>
 
       {error && (
-        <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-start space-x-3 animate-fade-in">
+        <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-start space-x-3">
           <AlertCircle className="text-rose-500 shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
             <p className="text-rose-700 font-bold text-sm">Problema con la conexión</p>
@@ -108,6 +119,67 @@ const Socios = () => {
           <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-600"><X size={18} /></button>
         </div>
       )}
+
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-50">
+          <div className="relative max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+            <input type="text" placeholder="Buscar jugador..." className="w-full pl-12 pr-6 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[600px]">
+            <thead className="bg-slate-50/50">
+              <tr>
+                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Jugador</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Categoría</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Estado Cuota</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+              ) : filteredSocios.length === 0 ? (
+                <tr><td colSpan={4} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">No hay jugadores registrados</td></tr>
+              ) : filteredSocios.map(socio => {
+                const isPaid = getPaymentStatus(socio.id);
+                return (
+                  <tr key={socio.id} className="hover:bg-slate-50 transition-all">
+                    <td className="px-8 py-5">
+                      <div className="font-black text-slate-900">{socio.nombre} {socio.apellido}</div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{socio.nombreTutor}</div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider">{socio.categoria}</span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        {isPaid ? <CheckCircle size={12} /> : <Clock size={12} />}
+                        <span>{isPaid ? 'AL DÍA' : 'VENCIDO'}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <a 
+                          href={getWhatsAppLink(socio.telefonoTutor)} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
+                        >
+                          <MessageCircle size={18} />
+                        </a>
+                        <button onClick={() => { setEditingSocio(socio); setIsModalOpen(true); }} className="p-2 text-slate-300 hover:text-primary bg-white border border-slate-100 rounded-xl transition-all"><Edit2 size={16} /></button>
+                        <button onClick={() => handleDelete(socio.id)} className="p-2 text-slate-300 hover:text-red-600 bg-white border border-slate-100 rounded-xl transition-all"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -150,56 +222,6 @@ const Socios = () => {
           </div>
         </div>
       )}
-
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50">
-          <div className="relative max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-            <input type="text" placeholder="Buscar jugador..." className="w-full pl-12 pr-6 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-          </div>
-        </div>
-        <table className="w-full text-left">
-          <thead className="bg-slate-50/50">
-            <tr>
-              <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Jugador</th>
-              <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Categoría</th>
-              <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
-            ) : filteredSocios.length === 0 ? (
-              <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">{error ? "Error al cargar datos" : "No hay jugadores registrados"}</td></tr>
-            ) : filteredSocios.map(socio => (
-              <tr key={socio.id} className="hover:bg-slate-50 transition-all">
-                <td className="px-8 py-5">
-                  <div className="font-black text-slate-900">{socio.nombre} {socio.apellido}</div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{socio.nombreTutor} • {socio.telefonoTutor}</div>
-                </td>
-                <td className="px-8 py-5">
-                  <span className="px-3 py-1 rounded-xl bg-accent/20 text-secondary text-[10px] font-black uppercase tracking-wider">{socio.categoria}</span>
-                </td>
-                <td className="px-8 py-5 text-right">
-                  <div className="flex justify-end space-x-2">
-                    <a 
-                      href={getWhatsAppLink(socio.telefonoTutor)} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
-                      title="Contactar WhatsApp"
-                    >
-                      <MessageCircle size={18} />
-                    </a>
-                    <button onClick={() => { setEditingSocio(socio); setIsModalOpen(true); }} className="p-2 text-slate-300 hover:text-primary bg-white border border-slate-100 rounded-xl hover:shadow-lg transition-all"><Edit2 size={16} /></button>
-                    <button onClick={() => handleDelete(socio.id)} className="p-2 text-slate-300 hover:text-red-600 bg-white border border-slate-100 rounded-xl hover:shadow-lg transition-all"><Trash2 size={16} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };
