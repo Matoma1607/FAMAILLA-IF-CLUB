@@ -92,7 +92,7 @@ const Login: React.FC<{ onLogin: (user: any) => void }> = ({ onLogin }) => {
             <input 
               type="email" 
               required
-              placeholder="admin@club.com" 
+              placeholder="email@email.com" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold focus:ring-4 focus:ring-accent/30 focus:border-primary transition-all"
