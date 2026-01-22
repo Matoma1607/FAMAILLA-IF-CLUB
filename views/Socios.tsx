@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Search, Plus, Filter, X, Edit2, Trash2, AlertCircle, Loader2 
+  Search, Plus, Filter, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle
 } from 'lucide-react';
 import { getSocios, saveSocio, deleteSocio } from '../services/dataService';
 import { Socio, Category } from '../types';
@@ -66,11 +66,11 @@ const Socios = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Plantel de Jugadores</h2>
-          <p className="text-slate-500">Administra el listado oficial de Peques FC.</p>
+          <p className="text-slate-500">Administra el listado oficial de FAMAILLA IF.</p>
         </div>
         <button 
           onClick={() => { setEditingSocio({ categoria: Category.CEBOLLITAS, activo: true }); setIsModalOpen(true); }}
-          className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center space-x-2"
+          className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
         >
           <Plus size={20} />
           <span>Nuevo Alumno</span>
@@ -88,11 +88,11 @@ const Socios = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
-                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-blue-500" value={editingSocio?.nombre || ''} onChange={e => setEditingSocio({...editingSocio, nombre: e.target.value})} />
+                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingSocio?.nombre || ''} onChange={e => setEditingSocio({...editingSocio, nombre: e.target.value})} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Apellido</label>
-                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-blue-500" value={editingSocio?.apellido || ''} onChange={e => setEditingSocio({...editingSocio, apellido: e.target.value})} />
+                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingSocio?.apellido || ''} onChange={e => setEditingSocio({...editingSocio, apellido: e.target.value})} />
                 </div>
               </div>
               <div className="space-y-1">
@@ -111,7 +111,7 @@ const Socios = () => {
                   <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
                 </div>
               </div>
-              <button type="submit" disabled={saving} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100 mt-4 flex items-center justify-center space-x-2">
+              <button type="submit" disabled={saving} className="w-full bg-primary text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-4 flex items-center justify-center space-x-2">
                 {saving ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR ALUMNO</span>}
               </button>
             </form>
@@ -136,7 +136,7 @@ const Socios = () => {
           </thead>
           <tbody className="divide-y divide-slate-50">
             {loading ? (
-              <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" /></td></tr>
+              <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
             ) : filteredSocios.length === 0 ? (
               <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">No hay jugadores registrados</td></tr>
             ) : filteredSocios.map(socio => (
@@ -146,11 +146,20 @@ const Socios = () => {
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{socio.nombreTutor} • {socio.telefonoTutor}</div>
                 </td>
                 <td className="px-8 py-5">
-                  <span className="px-3 py-1 rounded-xl bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider">{socio.categoria}</span>
+                  <span className="px-3 py-1 rounded-xl bg-accent/20 text-secondary text-[10px] font-black uppercase tracking-wider">{socio.categoria}</span>
                 </td>
                 <td className="px-8 py-5 text-right">
                   <div className="flex justify-end space-x-2">
-                    <button onClick={() => { setEditingSocio(socio); setIsModalOpen(true); }} className="p-2 text-slate-300 hover:text-blue-600 bg-white border border-slate-100 rounded-xl hover:shadow-lg transition-all"><Edit2 size={16} /></button>
+                    <a 
+                      href={`https://wa.me/${socio.telefonoTutor.replace(/\D/g, '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
+                      title="Contactar WhatsApp"
+                    >
+                      <MessageCircle size={18} />
+                    </a>
+                    <button onClick={() => { setEditingSocio(socio); setIsModalOpen(true); }} className="p-2 text-slate-300 hover:text-primary bg-white border border-slate-100 rounded-xl hover:shadow-lg transition-all"><Edit2 size={16} /></button>
                     <button onClick={() => handleDelete(socio.id)} className="p-2 text-slate-300 hover:text-red-600 bg-white border border-slate-100 rounded-xl hover:shadow-lg transition-all"><Trash2 size={16} /></button>
                   </div>
                 </td>
