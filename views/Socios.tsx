@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Search, Plus, Filter, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle
+  Search, Plus, Filter, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw
 } from 'lucide-react';
 import { getSocios, saveSocio, deleteSocio } from '../services/dataService';
 import { Socio, Category } from '../types';
@@ -20,10 +20,14 @@ const Socios = () => {
     setError(null);
     try {
       const data = await getSocios();
-      setSocios(data || []);
+      if (data && Array.isArray(data)) {
+        setSocios(data);
+      } else {
+        setError("No se recibió una lista válida de alumnos. Revisa los permisos de tu cuenta.");
+      }
     } catch (e) { 
       console.error(e);
-      setError("No se pudieron cargar los socios.");
+      setError("Error de conexión con el servidor de Famaillá IF.");
     }
     setLoading(false);
   };
@@ -41,10 +45,10 @@ const Socios = () => {
         setEditingSocio(null);
         await fetchSocios();
       } else {
-        setError("Error al guardar. Verifica la conexión.");
+        setError("Error al guardar. Tu usuario podría no tener permisos de escritura.");
       }
     } catch (err) {
-      setError("Error crítico al guardar.");
+      setError("Error crítico al intentar guardar en la base de datos.");
     } finally {
       setSaving(false);
     }
@@ -63,7 +67,6 @@ const Socios = () => {
 
   const getWhatsAppLink = (phone: any) => {
     if (!phone) return '#';
-    // Ensure phone is treated as string before replacement
     const cleanPhone = String(phone).replace(/\D/g, '');
     return `https://wa.me/${cleanPhone}`;
   };
@@ -75,14 +78,33 @@ const Socios = () => {
           <h2 className="text-2xl font-bold text-slate-900">Plantel de Jugadores</h2>
           <p className="text-slate-500">Administra el listado oficial de FAMAILLA IF.</p>
         </div>
-        <button 
-          onClick={() => { setEditingSocio({ categoria: Category.CEBOLLITAS, activo: true }); setIsModalOpen(true); }}
-          className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
-        >
-          <Plus size={20} />
-          <span>Nuevo Alumno</span>
-        </button>
+        <div className="flex space-x-2">
+          <button 
+            onClick={fetchSocios}
+            className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-all shadow-sm"
+            title="Refrescar lista"
+          >
+            <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button 
+            onClick={() => { setEditingSocio({ categoria: Category.CEBOLLITAS, activo: true }); setIsModalOpen(true); }}
+            className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
+          >
+            <Plus size={20} />
+            <span>Nuevo Alumno</span>
+          </button>
+        </div>
       </div>
+
+      {error && (
+        <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-start space-x-3 animate-fade-in">
+          <AlertCircle className="text-rose-500 shrink-0 mt-0.5" size={20} />
+          <div>
+            <p className="text-rose-700 font-bold text-sm">Problema detectado</p>
+            <p className="text-rose-600 text-xs">{error}</p>
+          </div>
+        </div>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -145,7 +167,7 @@ const Socios = () => {
             {loading ? (
               <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
             ) : filteredSocios.length === 0 ? (
-              <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">No hay jugadores registrados</td></tr>
+              <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">{error ? "Error al cargar datos" : "No hay jugadores registrados"}</td></tr>
             ) : filteredSocios.map(socio => (
               <tr key={socio.id} className="hover:bg-slate-50 transition-all">
                 <td className="px-8 py-5">
