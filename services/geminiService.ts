@@ -3,6 +3,11 @@ import { GoogleGenAI } from "@google/genai";
 
 export const getClubInsights = async (data: any) => {
   try {
+    // Safety check for environment variables before access
+    if (typeof process === 'undefined' || !process.env || !process.env.API_KEY) {
+      throw new Error("API Key configuration missing or process undefined");
+    }
+
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -15,6 +20,6 @@ export const getClubInsights = async (data: any) => {
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Los insights de Famaillá IF estarán disponibles en breve.";
+    return "Los insights estratégicos de Famaillá IF estarán disponibles una vez configurada la conexión inteligente.";
   }
 };
