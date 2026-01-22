@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, CheckCircle, Clock
+  Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, CheckCircle, Clock, Calendar
 } from 'lucide-react';
 import { getSocios, saveSocio, deleteSocio, getPagos } from '../services/dataService';
 import { Socio, Category, Pago } from '../types';
@@ -20,6 +20,7 @@ const Socios = () => {
   const now = new Date();
   const mesActual = meses[now.getMonth()];
   const anioActual = now.getFullYear();
+  const fechaHoy = now.toISOString().split('T')[0];
 
   const fetchData = async () => {
     setLoading(true);
@@ -84,6 +85,12 @@ const Socios = () => {
     return `https://wa.me/${cleanPhone}`;
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "S/D";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -100,7 +107,7 @@ const Socios = () => {
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </button>
           <button 
-            onClick={() => { setEditingSocio({ categoria: Category.CEBOLLITAS, activo: true }); setIsModalOpen(true); }}
+            onClick={() => { setEditingSocio({ categoria: Category.CEBOLLITAS, activo: true, fechaInscripcion: fechaHoy }); setIsModalOpen(true); }}
             className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
           >
             <Plus size={20} />
@@ -133,15 +140,16 @@ const Socios = () => {
               <tr>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Jugador</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Categoría</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Ingreso</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Estado Cuota</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
               ) : filteredSocios.length === 0 ? (
-                <tr><td colSpan={4} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">No hay jugadores registrados</td></tr>
+                <tr><td colSpan={5} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">No hay jugadores registrados</td></tr>
               ) : filteredSocios.map(socio => {
                 const isPaid = getPaymentStatus(socio.id);
                 return (
@@ -152,6 +160,12 @@ const Socios = () => {
                     </td>
                     <td className="px-8 py-5">
                       <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider">{socio.categoria}</span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center space-x-2 text-[10px] font-bold text-slate-500">
+                        <Calendar size={12} className="text-slate-300" />
+                        <span>{formatDate(socio.fechaInscripcion)}</span>
+                      </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
@@ -199,12 +213,26 @@ const Socios = () => {
                   <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingSocio?.apellido || ''} onChange={e => setEditingSocio({...editingSocio, apellido: e.target.value})} />
                 </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
-                <select className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold" value={editingSocio?.categoria || ''} onChange={e => setEditingSocio({...editingSocio, categoria: e.target.value as Category})}>
-                  {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
+                  <select className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold" value={editingSocio?.categoria || ''} onChange={e => setEditingSocio({...editingSocio, categoria: e.target.value as Category})}>
+                    {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Ingreso</label>
+                  <input 
+                    type="date" 
+                    required 
+                    className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" 
+                    value={editingSocio?.fechaInscripcion || fechaHoy} 
+                    onChange={e => setEditingSocio({...editingSocio, fechaInscripcion: e.target.value})} 
+                  />
+                </div>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tutor</label>
