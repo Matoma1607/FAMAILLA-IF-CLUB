@@ -1,7 +1,7 @@
 
 import { Socio, Pago, Entrenamiento, Asistencia } from '../types';
 
-export const GAS_URL = 'https://script.google.com/macros/s/AKfycbwcs0yBT6WWfvN4dB6nmhVbLi8iVsXIdrHg1ZsJl9joqbHEqg8Oq9hFWjXxI_t5WLuR/exec';
+export const GAS_URL = 'https://script.google.com/macros/s/AKfycbzTRMh7S1kFH8Advp2HlVMXP3fG9AE8YQonNevTC29QI_NIny63RmjQWjW9slq89c-H/exec';
 
 const getUserToken = () => {
   const session = localStorage.getItem('peques_session');
@@ -10,17 +10,23 @@ const getUserToken = () => {
 
 const request = async (action: string, data?: any) => {
   const userToken = getUserToken();
-  const url = new URL(GAS_URL);
-  
+  if (!userToken && action !== 'validarUsuario') {
+    console.error("No hay sesión activa para realizar la acción:", action);
+    return null;
+  }
+
   try {
     if (action.startsWith('obtener') || action === 'validarUsuario') {
       const emailParam = action === 'validarUsuario' ? data?.email : userToken;
       const response = await fetch(`${GAS_URL}?action=${action}&userToken=${emailParam}`);
-      if (!response.ok) return null;
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Error ${response.status} en ${action}:`, errorData.error || response.statusText);
+        return null;
+      }
       return await response.json();
     } else {
-      // POST requires careful handling with GAS (it doesn't support CORS OPTIONS preflight well)
-      // We use a simple fetch without custom headers to avoid preflight
       const payload = { 
         action, 
         userToken,
@@ -35,19 +41,17 @@ const request = async (action: string, data?: any) => {
         body: JSON.stringify(payload)
       });
       
-      // Since GAS returns 302/200 but opaque in some configurations, 
-      // we check if we got a valid response or just assume success if it didn't throw
       return { success: true };
     }
   } catch (error) {
-    console.error(`Error GAS [${action}]:`, error);
-    // Fallback for demo purposes if script is not reachable
+    console.error(`Error de red/GAS [${action}]:`, error);
     return null;
   }
 };
 
 export const getSocios = async (): Promise<Socio[]> => {
   const res = await request('obtenerSocios');
+  if (!res) return [];
   return Array.isArray(res) ? res : [];
 };
 
@@ -68,10 +72,6 @@ export const getPagos = async (): Promise<Pago[]> => {
 export const registrarPago = async (pago: any) => {
   const payload = { ...pago, id: pago.id || `P-${Date.now()}` };
   return await request('guardarPago', payload);
-};
-
-export const generarMensualidades = async () => {
-  return await request('generarMensualidades');
 };
 
 export const updateEstadoPago = async (id: string, estado: string) => {
