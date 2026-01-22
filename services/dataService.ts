@@ -1,7 +1,7 @@
 
 import { Socio, Pago, Entrenamiento, Asistencia } from '../types';
 
-export const GAS_URL = 'https://script.google.com/macros/s/AKfycbwVREPvlhBRfq0Q2kduIgGO0PoLkpNPV47-k9xZhaigUNiGU8zr1q1glak26McwLBG3/exec';
+export const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbZ5w-h1-XulEWobO2Ra3jPwQQqu5nHFtXKwcIP1fbOxpz6Nno774GSHVXvLIDPibP/exec';
 
 const getUserToken = () => {
   const session = localStorage.getItem('peques_session');
