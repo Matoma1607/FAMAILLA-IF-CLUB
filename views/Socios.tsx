@@ -20,13 +20,13 @@ const Socios = () => {
     setError(null);
     try {
       const data = await getSocios();
-      setSocios(data);
-      if (data.length === 0) {
-        // No necesariamente un error, pero lo logueamos internamente
-        console.log("No se encontraron socios o falta permiso.");
+      setSocios(data || []);
+      if (!data || data.length === 0) {
+        console.log("Carga completa: La lista de alumnos está vacía.");
       }
     } catch (e: any) { 
-      setError(e.message || "Error de conexión con el servidor.");
+      console.error("Error en fetchSocios:", e);
+      setError(`Falla de servidor: ${e.message}`);
     }
     setLoading(false);
   };
@@ -41,9 +41,11 @@ const Socios = () => {
       await saveSocio(editingSocio);
       setIsModalOpen(false);
       setEditingSocio(null);
-      await fetchSocios();
+      // Pequeña espera para que Google Sheets procese
+      setTimeout(() => fetchSocios(), 500);
     } catch (err: any) {
-      setError(err.message || "No tienes permiso para guardar o hubo un error de red.");
+      console.error("Error en handleSubmit:", err);
+      setError(`Error al guardar: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -80,7 +82,8 @@ const Socios = () => {
         <div className="flex space-x-2">
           <button 
             onClick={fetchSocios}
-            className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-all shadow-sm"
+            disabled={loading}
+            className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-all shadow-sm disabled:opacity-50"
             title="Refrescar lista"
           >
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -98,11 +101,11 @@ const Socios = () => {
       {error && (
         <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-start space-x-3 animate-fade-in">
           <AlertCircle className="text-rose-500 shrink-0 mt-0.5" size={20} />
-          <div>
-            <p className="text-rose-700 font-bold text-sm">Aviso del Servidor</p>
+          <div className="flex-1">
+            <p className="text-rose-700 font-bold text-sm">Problema con la conexión</p>
             <p className="text-rose-600 text-xs">{error}</p>
           </div>
-          <button onClick={() => setError(null)} className="ml-auto text-rose-400"><X size={16} /></button>
+          <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-600"><X size={18} /></button>
         </div>
       )}
 
@@ -167,7 +170,7 @@ const Socios = () => {
             {loading ? (
               <tr><td colSpan={3} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></td></tr>
             ) : filteredSocios.length === 0 ? (
-              <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">No hay jugadores registrados</td></tr>
+              <tr><td colSpan={3} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest">{error ? "Error al cargar datos" : "No hay jugadores registrados"}</td></tr>
             ) : filteredSocios.map(socio => (
               <tr key={socio.id} className="hover:bg-slate-50 transition-all">
                 <td className="px-8 py-5">

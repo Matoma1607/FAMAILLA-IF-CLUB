@@ -1,7 +1,7 @@
 
 import { Socio, Pago, Entrenamiento, Asistencia } from '../types';
 
-export const GAS_URL = 'https://script.google.com/macros/s/AKfycbxS4rwt5_N9cVbUdYd7-7P3M7YDjylSb71bFMgmNsMyLWVgm10ioM2Q2NUmRjkwvdft/exec';
+export const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJfjOZeMFGRnvocEJ9lHeeH3IqEt7EN89ZIEP8dAbrhoOKzLFBfe9YMyL2fzRIqi1K/exec';
 
 const getUserToken = () => {
   const session = localStorage.getItem('peques_session');
@@ -11,8 +11,7 @@ const getUserToken = () => {
 const request = async (action: string, data?: any) => {
   const userToken = getUserToken();
   if (!userToken && action !== 'validarUsuario') {
-    console.error("No hay sesión activa para realizar la acción:", action);
-    return null;
+    throw new Error("Sesión expirada. Por favor, vuelve a ingresar.");
   }
 
   try {
@@ -20,11 +19,11 @@ const request = async (action: string, data?: any) => {
       const emailParam = action === 'validarUsuario' ? data?.email : userToken;
       const response = await fetch(`${GAS_URL}?action=${action}&userToken=${emailParam}`);
       
+      const responseData = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error del servidor (${response.status})`);
+        throw new Error(responseData.error || `Error del servidor (${response.status})`);
       }
-      return await response.json();
+      return responseData;
     } else {
       const payload = { 
         action, 
@@ -40,12 +39,12 @@ const request = async (action: string, data?: any) => {
         body: JSON.stringify(payload)
       });
       
+      const responseData = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error al guardar (${response.status})`);
+        throw new Error(responseData.error || `Error al guardar (${response.status})`);
       }
       
-      return await response.json();
+      return responseData;
     }
   } catch (error: any) {
     console.error(`Error GAS [${action}]:`, error.message);
@@ -54,12 +53,8 @@ const request = async (action: string, data?: any) => {
 };
 
 export const getSocios = async (): Promise<Socio[]> => {
-  try {
-    const res = await request('obtenerSocios');
-    return Array.isArray(res) ? res : [];
-  } catch (e) {
-    return [];
-  }
+  const res = await request('obtenerSocios');
+  return Array.isArray(res) ? res : [];
 };
 
 export const saveSocio = async (socio: any) => {
@@ -72,12 +67,8 @@ export const deleteSocio = async (id: string) => {
 };
 
 export const getPagos = async (): Promise<Pago[]> => {
-  try {
-    const res = await request('obtenerPagos');
-    return Array.isArray(res) ? res : [];
-  } catch (e) {
-    return [];
-  }
+  const res = await request('obtenerPagos');
+  return Array.isArray(res) ? res : [];
 };
 
 export const registrarPago = async (pago: any) => {
@@ -94,12 +85,8 @@ export const deletePago = async (id: string) => {
 };
 
 export const getEntrenamientos = async (): Promise<Entrenamiento[]> => {
-  try {
-    const res = await request('obtenerEntrenamientos');
-    return Array.isArray(res) ? res : [];
-  } catch (e) {
-    return [];
-  }
+  const res = await request('obtenerEntrenamientos');
+  return Array.isArray(res) ? res : [];
 };
 
 export const saveEntrenamiento = async (ent: any) => {
@@ -112,12 +99,8 @@ export const deleteEntrenamiento = async (id: string) => {
 };
 
 export const getAsistencia = async (): Promise<Asistencia[]> => {
-  try {
-    const res = await request('obtenerAsistencia');
-    return Array.isArray(res) ? res : [];
-  } catch (e) {
-    return [];
-  }
+  const res = await request('obtenerAsistencia');
+  return Array.isArray(res) ? res : [];
 };
 
 export const saveAsistencia = async (batch: any[]) => {
