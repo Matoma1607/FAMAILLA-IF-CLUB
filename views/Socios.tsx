@@ -58,8 +58,15 @@ const Socios = () => {
   };
 
   const filteredSocios = socios.filter(s => 
-    `${s.nombre} ${s.apellido}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${s.nombre || ''} ${s.apellido || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getWhatsAppLink = (phone: any) => {
+    if (!phone) return '#';
+    // Ensure phone is treated as string before replacement
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    return `https://wa.me/${cleanPhone}`;
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -151,7 +158,7 @@ const Socios = () => {
                 <td className="px-8 py-5 text-right">
                   <div className="flex justify-end space-x-2">
                     <a 
-                      href={`https://wa.me/${socio.telefonoTutor.replace(/\D/g, '')}`} 
+                      href={getWhatsAppLink(socio.telefonoTutor)} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
