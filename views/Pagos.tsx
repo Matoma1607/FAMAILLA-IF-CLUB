@@ -110,7 +110,6 @@ const Pagos = () => {
           </div>
         </div>
         
-        {/* Wrapper para scroll horizontal en móviles */}
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left min-w-[700px]">
             <thead className="bg-slate-50/50">
@@ -169,14 +168,14 @@ const Pagos = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 overflow-hidden relative">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 my-auto animate-fade-in relative">
             <div className="flex justify-between items-center mb-8">
                <div>
                  <h3 className="text-xl font-bold text-secondary">{editingPago?.id ? 'Editar Cobro' : 'Registrar Cobro'}</h3>
                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tesorería Famaillá IF</p>
                </div>
-               <button onClick={() => { setIsModalOpen(false); setEditingPago(null); }} className="text-slate-300 hover:text-slate-600 transition-colors"><X size={24} /></button>
+               <button onClick={() => { setIsModalOpen(false); setEditingPago(null); }} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
             </div>
             <form onSubmit={handleSave} className="space-y-5">
               <div className="space-y-1">
