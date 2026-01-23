@@ -22,14 +22,36 @@ const Entrenamientos = () => {
 
   useEffect(() => { fetchEntrenamientos(); }, []);
 
+  // Función para limpiar la hora de Google Sheets (ISO -> HH:mm)
+  const formatTimeDisplay = (time: string) => {
+    if (!time) return "S/H";
+    // Si contiene 'T' es un ISO string de Sheets
+    if (time.includes('T')) {
+      try {
+        const date = new Date(time);
+        // Usamos Intl para asegurar formato local 24hs
+        return date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } catch (e) {
+        return time;
+      }
+    }
+    return time;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
-    await saveEntrenamiento(editingEnt);
-    setProcessing(false);
-    setIsModalOpen(false);
-    setEditingEnt(null);
-    fetchEntrenamientos();
+    try {
+      await saveEntrenamiento(editingEnt);
+      setIsModalOpen(false);
+      setEditingEnt(null);
+      await fetchEntrenamientos();
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar el entrenamiento.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -46,7 +68,7 @@ const Entrenamientos = () => {
           <h2 className="text-2xl font-bold text-slate-900">Diario Técnico</h2>
           <p className="text-slate-500">Agenda de FAMAILLA IF (Entrenamientos y Partidos).</p>
         </div>
-        <button onClick={() => { setEditingEnt({ tipo: 'Entrenamiento', dia: 'Lunes', categoria: Category.CEBOLLITAS }); setIsModalOpen(true); }} className="bg-primary text-white px-8 py-3 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all">
+        <button onClick={() => { setEditingEnt({ tipo: 'Entrenamiento', dia: '', hora: '', lugar: '', profesor: '', categoria: Category.CEBOLLITAS }); setIsModalOpen(true); }} className="bg-primary text-white px-8 py-3 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all">
           <Plus size={20} />
           <span>Nuevo Evento</span>
         </button>
@@ -58,7 +80,7 @@ const Entrenamientos = () => {
           entrenamientos.map(ent => (
             <div key={ent.id} className="group relative bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
               <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditingEnt(ent); setIsModalOpen(true); }} className="p-2 bg-white border rounded-xl text-slate-400 hover:text-primary shadow-sm transition-colors"><Edit2 size={16} /></button>
+                <button onClick={() => { setEditingEnt({...ent, hora: formatTimeDisplay(ent.hora)}); setIsModalOpen(true); }} className="p-2 bg-white border rounded-xl text-slate-400 hover:text-primary shadow-sm transition-colors"><Edit2 size={16} /></button>
                 <button onClick={() => handleDelete(ent.id)} className="p-2 bg-white border rounded-xl text-slate-400 hover:text-red-600 shadow-sm transition-colors"><Trash2 size={16} /></button>
               </div>
               <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-[10px] font-black uppercase mb-4 ${ent.tipo === 'Partido' ? 'bg-amber-50 text-amber-600' : 'bg-primary/10 text-primary'}`}>
@@ -68,7 +90,7 @@ const Entrenamientos = () => {
               <h4 className="text-xl font-bold text-slate-900">{ent.dia}</h4>
               <p className="text-xs font-black text-primary uppercase mb-4">{ent.categoria}</p>
               <div className="space-y-2 text-sm text-slate-600">
-                <div className="flex items-center space-x-2"><Clock size={16}/> <span>{ent.hora} HS</span></div>
+                <div className="flex items-center space-x-2"><Clock size={16}/> <span>{formatTimeDisplay(ent.hora)} HS</span></div>
                 <div className="flex items-center space-x-2"><MapPin size={16}/> <span>{ent.lugar}</span></div>
                 <div className="flex items-center space-x-2"><User size={16}/> <span className="font-bold">{ent.profesor || "Sin Profe asignado"}</span></div>
               </div>
