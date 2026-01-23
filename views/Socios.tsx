@@ -196,11 +196,11 @@ const Socios = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-8 border-b flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl my-auto animate-fade-in">
+            <div className="p-8 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem]">
               <h3 className="text-xl font-bold">{editingSocio?.id ? 'Editar Jugador' : 'Nuevo Ingreso'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={24} /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-4">
               <div className="grid grid-cols-2 gap-4">
