@@ -22,14 +22,11 @@ const Entrenamientos = () => {
 
   useEffect(() => { fetchEntrenamientos(); }, []);
 
-  // Función para limpiar la hora de Google Sheets (ISO -> HH:mm)
   const formatTimeDisplay = (time: string) => {
     if (!time) return "S/H";
-    // Si contiene 'T' es un ISO string de Sheets
     if (time.includes('T')) {
       try {
         const date = new Date(time);
-        // Usamos Intl para asegurar formato local 24hs
         return date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
       } catch (e) {
         return time;
@@ -100,11 +97,11 @@ const Entrenamientos = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl my-auto animate-fade-in">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold">{editingEnt?.id ? 'Editar Evento' : 'Programar Fecha'}</h3>
-              <button onClick={() => { setIsModalOpen(false); setEditingEnt(null); }} className="text-slate-400"><X size={24} /></button>
+              <button onClick={() => { setIsModalOpen(false); setEditingEnt(null); }} className="text-slate-400 hover:text-slate-600 p-2"><X size={24} /></button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
