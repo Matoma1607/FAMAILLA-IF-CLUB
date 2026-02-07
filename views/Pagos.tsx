@@ -144,10 +144,10 @@ const Pagos = () => {
                     <td className="px-8 py-5 text-center">
                       <button 
                         onClick={() => togglePago(p.id, p.estado)} 
-                        className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase transition-all shadow-sm hover:scale-105 active:scale-95 ${
+                        className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase transition-all shadow-sm hover:scale-105 active:scale-95 border ${
                           p.estado === 'PAGADO' 
-                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-                            : 'bg-amber-50 text-amber-600 border border-amber-100'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                            : 'bg-rose-50 text-rose-600 border-rose-100'
                         }`}
                       >
                         {p.estado}
@@ -223,6 +223,25 @@ const Pagos = () => {
                   value={editingPago?.monto || ""} 
                   onChange={e => setEditingPago({...editingPago, monto: Number(e.target.value)})} 
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1 text-center block">Estado Inicial</label>
+                <div className="flex bg-slate-50 p-1 rounded-2xl border border-slate-100">
+                  <button 
+                    type="button"
+                    onClick={() => setEditingPago({...editingPago, estado: 'PAGADO'})}
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PAGADO' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400'}`}
+                  >
+                    Pagado
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setEditingPago({...editingPago, estado: 'PENDIENTE'})}
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PENDIENTE' ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-400'}`}
+                  >
+                    Pendiente
+                  </button>
+                </div>
               </div>
               <button 
                 type="submit" 
