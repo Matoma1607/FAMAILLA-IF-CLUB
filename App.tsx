@@ -46,7 +46,7 @@ const Login: React.FC<{ onLogin: (user: any) => void }> = ({ onLogin }) => {
     setLoading(true);
     setError('');
 
-    if (email === 'admin@club.com') {
+    if (email === 'pablofc@club.com') {
       const userData = { email, rol: 'owner' };
       localStorage.setItem('peques_session', JSON.stringify(userData));
       onLogin(userData);
