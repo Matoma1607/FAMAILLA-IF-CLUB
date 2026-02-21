@@ -63,9 +63,9 @@ const Dashboard = () => {
         // Calcular deudores del mes actual
         const listaDeudores = socios.filter(s => {
           const pago = pagos.find(p => 
-            String(p.socioId) === String(s.id) && 
-            p.mes === mesActual && 
-            p.anio === anioActual &&
+            String(p.socioId).trim() === String(s.id).trim() && 
+            String(p.mes).trim() === String(mesActual).trim() && 
+            String(p.anio).trim() === String(anioActual).trim() &&
             p.estado === 'PAGADO'
           );
           return !pago;
