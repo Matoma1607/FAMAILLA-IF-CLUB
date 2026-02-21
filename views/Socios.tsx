@@ -18,8 +18,21 @@ const Socios = () => {
     inscripcion: false,
     mensual: false,
     seguro: false,
-    metodo: 'EFECTIVO' as 'EFECTIVO' | 'TRANSFERENCIA'
+    metodo: 'EFECTIVO' as 'EFECTIVO' | 'TRANSFERENCIA',
+    monto: 0
   });
+
+  const PRECIOS = { inscripcion: 5000, mensual: 8500, seguro: 3000 };
+
+  useEffect(() => {
+    if (!editingSocio?.id) {
+      const total = (initialPayments.inscripcion ? PRECIOS.inscripcion : 0) + 
+                    (initialPayments.mensual ? PRECIOS.mensual : 0) + 
+                    (initialPayments.seguro ? PRECIOS.seguro : 0);
+      setInitialPayments(prev => ({ ...prev, monto: total }));
+    }
+  }, [initialPayments.inscripcion, initialPayments.mensual, initialPayments.seguro]);
+
   const [error, setError] = useState<string | null>(null);
 
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -54,49 +67,28 @@ const Socios = () => {
       const socioId = savedSocio?.id; 
 
       if (isNew && socioId) {
-        // Registrar pagos iniciales si se seleccionaron
-        const paymentPromises = [];
-        if (initialPayments.inscripcion) {
-          paymentPromises.push(registrarPago({
+        // Registrar UN SOLO pago combinado si hay opciones seleccionadas
+        const conceptos = [];
+        if (initialPayments.inscripcion) conceptos.push('Inscripción');
+        if (initialPayments.mensual) conceptos.push('Mensual');
+        if (initialPayments.seguro) conceptos.push('Seguro');
+
+        if (conceptos.length > 0 && initialPayments.monto > 0) {
+          await registrarPago({
             socioId,
             mes: mesActual,
             anio: anioActual,
-            monto: 5000, // Monto genérico para inscripción
+            monto: initialPayments.monto,
             estado: 'PAGADO',
             metodo: initialPayments.metodo,
-            nota: 'Inscripción Inicial'
-          }));
-        }
-        if (initialPayments.mensual) {
-          paymentPromises.push(registrarPago({
-            socioId,
-            mes: mesActual,
-            anio: anioActual,
-            monto: 8500, // Cuota mensual
-            estado: 'PAGADO',
-            metodo: initialPayments.metodo,
-            nota: 'Mensual Inicial'
-          }));
-        }
-        if (initialPayments.seguro) {
-          paymentPromises.push(registrarPago({
-            socioId,
-            mes: 'Anual',
-            anio: anioActual,
-            monto: 3000, // Seguro
-            estado: 'PAGADO',
-            metodo: initialPayments.metodo,
-            nota: 'Seguro Deportivo'
-          }));
-        }
-        if (paymentPromises.length > 0) {
-          await Promise.all(paymentPromises);
+            nota: conceptos.join(' + ')
+          });
         }
       }
 
       setIsModalOpen(false);
       setEditingSocio(null);
-      setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO' });
+      setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO', monto: 0 });
       setTimeout(() => fetchData(), 500);
     } catch (err: any) {
       setError(`Error al guardar: ${err.message}`);
@@ -166,7 +158,7 @@ const Socios = () => {
           <button 
             onClick={() => { 
               setEditingSocio({ categoria: Category.CHUPETONES, activo: true, fechaInscripcion: fechaHoy }); 
-              setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO' });
+              setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO', monto: 0 });
               setIsModalOpen(true); 
             }}
             className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
@@ -317,7 +309,12 @@ const Socios = () => {
 
               {!editingSocio?.id && (
                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-secondary">Pagos Iniciales</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-secondary">Cobro Inicial</h4>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">SOLO NUEVOS</span>
+                  </div>
+
+                  {/* 1. Opciones de pago */}
                   <div className="grid grid-cols-3 gap-2">
                     <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
                       <input type="checkbox" className="hidden" checked={initialPayments.inscripcion} onChange={e => setInitialPayments({...initialPayments, inscripcion: e.target.checked})} />
@@ -333,6 +330,20 @@ const Socios = () => {
                     </label>
                   </div>
                   
+                  {/* 2. Monto Total */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Monto Total a Cobrar ($)</label>
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        className="w-full px-5 py-3 bg-white border border-slate-100 rounded-2xl font-black text-lg outline-none focus:border-primary text-secondary" 
+                        value={initialPayments.monto} 
+                        onChange={e => setInitialPayments({...initialPayments, monto: Number(e.target.value)})} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3. Método de pago */}
                   <div className="flex bg-white p-1 rounded-2xl border border-slate-100">
                     <button 
                       type="button"
