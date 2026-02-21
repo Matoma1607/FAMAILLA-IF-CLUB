@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, Check, Clock, Calendar
 } from 'lucide-react';
-import { getSocios, saveSocio, deleteSocio, getPagos } from '../services/dataService';
+import { getSocios, saveSocio, deleteSocio, getPagos, registrarPago } from '../services/dataService';
 import { Socio, Category, Pago } from '../types';
 
 const Socios = () => {
@@ -14,6 +14,12 @@ const Socios = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSocio, setEditingSocio] = useState<Partial<Socio> | null>(null);
+  const [initialPayments, setInitialPayments] = useState({
+    inscripcion: false,
+    mensual: false,
+    seguro: false,
+    metodo: 'EFECTIVO' as 'EFECTIVO' | 'TRANSFERENCIA'
+  });
   const [error, setError] = useState<string | null>(null);
 
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -43,9 +49,54 @@ const Socios = () => {
     setSaving(true);
     setError(null);
     try {
-      await saveSocio(editingSocio);
+      const isNew = !editingSocio?.id;
+      const savedSocio = await saveSocio(editingSocio);
+      const socioId = editingSocio?.id || savedSocio?.id || `S-${Date.now()}`; // Fallback if server doesn't return ID
+
+      if (isNew) {
+        // Registrar pagos iniciales si se seleccionaron
+        const paymentPromises = [];
+        if (initialPayments.inscripcion) {
+          paymentPromises.push(registrarPago({
+            socioId,
+            mes: mesActual,
+            anio: anioActual,
+            monto: 5000, // Monto genérico para inscripción
+            estado: 'PAGADO',
+            metodo: initialPayments.metodo,
+            nota: 'Inscripción Inicial'
+          }));
+        }
+        if (initialPayments.mensual) {
+          paymentPromises.push(registrarPago({
+            socioId,
+            mes: mesActual,
+            anio: anioActual,
+            monto: 8500, // Cuota mensual
+            estado: 'PAGADO',
+            metodo: initialPayments.metodo,
+            nota: 'Mensual Inicial'
+          }));
+        }
+        if (initialPayments.seguro) {
+          paymentPromises.push(registrarPago({
+            socioId,
+            mes: 'Anual',
+            anio: anioActual,
+            monto: 3000, // Seguro
+            estado: 'PAGADO',
+            metodo: initialPayments.metodo,
+            nota: 'Seguro Deportivo'
+          }));
+        }
+        if (paymentPromises.length > 0) {
+          await Promise.all(paymentPromises);
+        }
+      }
+
       setIsModalOpen(false);
       setEditingSocio(null);
+      setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO' });
       setTimeout(() => fetchData(), 500);
     } catch (err: any) {
       setError(`Error al guardar: ${err.message}`);
@@ -113,7 +164,11 @@ const Socios = () => {
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </button>
           <button 
-            onClick={() => { setEditingSocio({ categoria: Category.CEBOLLITAS, activo: true, fechaInscripcion: fechaHoy }); setIsModalOpen(true); }}
+            onClick={() => { 
+              setEditingSocio({ categoria: Category.CHUPETONES, activo: true, fechaInscripcion: fechaHoy }); 
+              setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO' });
+              setIsModalOpen(true); 
+            }}
             className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
           >
             <Plus size={20} />
@@ -228,6 +283,18 @@ const Socios = () => {
                   </select>
                 </div>
                 <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Nacimiento</label>
+                  <input 
+                    type="date" 
+                    className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" 
+                    value={editingSocio?.fechaNacimiento || ''} 
+                    onChange={e => setEditingSocio({...editingSocio, fechaNacimiento: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Ingreso</label>
                   <input 
                     type="date" 
@@ -237,18 +304,53 @@ const Socios = () => {
                     onChange={e => setEditingSocio({...editingSocio, fechaInscripcion: e.target.value})} 
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tutor</label>
                   <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingSocio?.nombreTutor || ''} onChange={e => setEditingSocio({...editingSocio, nombreTutor: e.target.value})} />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">WhatsApp</label>
-                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
-                </div>
               </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">WhatsApp</label>
+                <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
+              </div>
+
+              {!editingSocio?.id && (
+                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-secondary">Pagos Iniciales</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                      <input type="checkbox" className="hidden" checked={initialPayments.inscripcion} onChange={e => setInitialPayments({...initialPayments, inscripcion: e.target.checked})} />
+                      <span className="text-[10px] font-black uppercase">Inscripción</span>
+                    </label>
+                    <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.mensual ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                      <input type="checkbox" className="hidden" checked={initialPayments.mensual} onChange={e => setInitialPayments({...initialPayments, mensual: e.target.checked})} />
+                      <span className="text-[10px] font-black uppercase">Mensual</span>
+                    </label>
+                    <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.seguro ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                      <input type="checkbox" className="hidden" checked={initialPayments.seguro} onChange={e => setInitialPayments({...initialPayments, seguro: e.target.checked})} />
+                      <span className="text-[10px] font-black uppercase">Seguro</span>
+                    </label>
+                  </div>
+                  
+                  <div className="flex bg-white p-1 rounded-2xl border border-slate-100">
+                    <button 
+                      type="button"
+                      onClick={() => setInitialPayments({...initialPayments, metodo: 'EFECTIVO'})}
+                      className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${initialPayments.metodo === 'EFECTIVO' ? 'bg-secondary text-white shadow-lg' : 'text-slate-400'}`}
+                    >
+                      Contado
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setInitialPayments({...initialPayments, metodo: 'TRANSFERENCIA'})}
+                      className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${initialPayments.metodo === 'TRANSFERENCIA' ? 'bg-secondary text-white shadow-lg' : 'text-slate-400'}`}
+                    >
+                      Transferencia
+                    </button>
+                  </div>
+                </div>
+              )}
               <button type="submit" disabled={saving} className="w-full bg-primary text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-4 flex items-center justify-center space-x-2">
                 {saving ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR ALUMNO</span>}
               </button>

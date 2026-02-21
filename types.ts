@@ -1,9 +1,9 @@
 
 export enum Category {
-  CEBOLLITAS = 'Cebollitas (5-6)',
-  PRE_DECIMA = 'Pre-Décima (7-8)',
-  DECIMA = 'Décima (9-10)',
-  INFANTIL = 'Infantil (11-12)'
+  CHUPETONES = 'CHUPETONES',
+  CEBOLLITAS = 'CEBOLLITAS',
+  INFANTILES = 'INFANTILES',
+  INFERIORES = 'INFERIORES'
 }
 
 export type EventType = 'Entrenamiento' | 'Partido' | 'Evento Especial';
@@ -17,6 +17,7 @@ export interface Socio {
   telefonoTutor: string;
   activo: boolean;
   fechaInscripcion: string;
+  fechaNacimiento?: string;
 }
 
 export interface Pago {
