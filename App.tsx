@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import Dashboard from './views/Dashboard.tsx';
-import Socios from './views/Socios.tsx';
-import Pagos from './views/Pagos.tsx';
-import Entrenamientos from './views/Entrenamientos.tsx';
-import AsistenciaView from './views/Asistencia.tsx';
-import { GAS_URL } from './services/dataService.ts';
+import Dashboard from './views/Dashboard';
+import Socios from './views/Socios';
+import Pagos from './views/Pagos';
+import Entrenamientos from './views/Entrenamientos';
+import AsistenciaView from './views/Asistencia';
+import { GAS_URL } from './services/dataService';
 import { 
   LayoutDashboard, 
   Users, 
@@ -81,7 +81,7 @@ const Login: React.FC<{ onLogin: (user: any) => void }> = ({ onLogin }) => {
     <div className="min-h-screen bg-secondary flex items-center justify-center p-6">
       <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl animate-fade-in text-center">
         <div className="flex justify-center mb-8">
-           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-xl">F</div>
+           <img src="https://i.postimg.cc/k52Y04V9/Gemini_Generated_Image_lau568lau568lau5.png" alt="Logo" className="w-24 h-24 object-contain drop-shadow-xl" referrerPolicy="no-referrer" />
         </div>
         <h3 className="text-2xl font-black mb-2 tracking-tight text-secondary">FAMAILLA IF</h3>
         <p className="text-slate-400 text-sm mb-8 font-bold uppercase tracking-widest italic">Manager Pro</p>
@@ -126,7 +126,7 @@ const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.Rea
       <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-secondary border-r border-slate-800 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full p-6 text-white">
           <div className="flex items-center space-x-3 mb-10 px-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/20">F</div>
+            <img src="https://i.postimg.cc/k52Y04V9/Gemini_Generated_Image_lau568lau568lau5.png" alt="Logo" className="w-12 h-12 object-contain" referrerPolicy="no-referrer" />
             <div>
               <h1 className="text-lg font-bold tracking-tight leading-none">FAMAILLA IF</h1>
               <span className="text-[10px] font-black text-accent uppercase tracking-widest">CLUB OFICIAL</span>
