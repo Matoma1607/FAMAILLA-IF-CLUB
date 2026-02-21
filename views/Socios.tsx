@@ -336,9 +336,10 @@ const Socios = () => {
                     <div className="relative">
                       <input 
                         type="number" 
+                        placeholder="0"
                         className="w-full px-5 py-3 bg-white border border-slate-100 rounded-2xl font-black text-lg outline-none focus:border-primary text-secondary" 
-                        value={initialPayments.monto} 
-                        onChange={e => setInitialPayments({...initialPayments, monto: Number(e.target.value)})} 
+                        value={initialPayments.monto === 0 ? '' : initialPayments.monto} 
+                        onChange={e => setInitialPayments({...initialPayments, monto: e.target.value === '' ? 0 : Number(e.target.value)})} 
                       />
                     </div>
                   </div>
