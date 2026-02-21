@@ -111,7 +111,9 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Alumnos" value={stats.total} icon={Users} colorClass="bg-primary" trend="Sincronizado" />
+        <Link to="/socios" className="block transition-transform hover:scale-[1.02] active:scale-[0.98]">
+          <StatCard title="Total Alumnos" value={stats.total} icon={Users} colorClass="bg-primary" trend="Sincronizado" />
+        </Link>
         <StatCard title="Plantel Activo" value={stats.activos} icon={TrendingUp} colorClass="bg-secondary" />
         <StatCard title="Vencidos este mes" value={stats.deudores} icon={AlertCircle} colorClass="bg-rose-600" />
         <StatCard title="Caja Total" value={`$${stats.recaudacion.toLocaleString()}`} icon={DollarSign} colorClass="bg-emerald-600" />
