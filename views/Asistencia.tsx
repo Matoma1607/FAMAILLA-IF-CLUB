@@ -8,9 +8,10 @@ import {
   Loader2, 
   CheckCircle2,
   FileDown,
-  X
+  X,
+  Plus
 } from 'lucide-react';
-import { getSocios, getAsistencia, saveAsistencia } from '../services/dataService';
+import { getSocios, getAsistencia, saveAsistencia, saveSocio } from '../services/dataService';
 import { Socio, Category, Asistencia } from '../types';
 
 const AsistenciaView = () => {
@@ -24,6 +25,9 @@ const AsistenciaView = () => {
   const [success, setSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<'registro' | 'reporte'>('registro');
   const [reportMonth, setReportMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [isNewSocioModalOpen, setIsNewSocioModalOpen] = useState(false);
+  const [newSocio, setNewSocio] = useState<Partial<Socio>>({});
+  const [creatingSocio, setCreatingSocio] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -192,6 +196,34 @@ const AsistenciaView = () => {
     return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
+  const handleQuickSocioSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingSocio(true);
+    try {
+      const socioToSave = {
+        ...newSocio,
+        activo: true,
+        fechaInscripcion: selectedDate
+      };
+      const saved = await saveSocio(socioToSave);
+      
+      // Refresh data
+      await fetchData();
+      
+      // Mark as present automatically
+      const newId = saved?.id || `S-${Date.now()}`;
+      setAsistenciaLocal(prev => ({ ...prev, [newId]: true }));
+      
+      setIsNewSocioModalOpen(false);
+      setNewSocio({});
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear alumno rápido");
+    } finally {
+      setCreatingSocio(false);
+    }
+  };
+
   const filteredSocios = socios.filter(s => s.categoria === selectedCat);
 
   const getReportData = () => {
@@ -219,6 +251,16 @@ const AsistenciaView = () => {
         <div className="flex space-x-2">
           {activeTab === 'registro' && (
             <>
+              <button 
+                onClick={() => {
+                  setNewSocio({ categoria: selectedCat });
+                  setIsNewSocioModalOpen(true);
+                }}
+                className="flex items-center justify-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl transition-all shadow-lg font-semibold"
+              >
+                <Plus size={20} />
+                <span className="hidden sm:inline">Nuevo Alumno</span>
+              </button>
               <button 
                 onClick={generateMonthlyPDF}
                 disabled={loading || socios.length === 0}
@@ -416,6 +458,49 @@ const AsistenciaView = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isNewSocioModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl my-auto animate-fade-in">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-secondary">Registro Rápido</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Añadir alumno y marcar asistencia</p>
+              </div>
+              <button onClick={() => setIsNewSocioModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={24} /></button>
+            </div>
+            <form onSubmit={handleQuickSocioSave} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
+                  <input required className="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold outline-none focus:border-primary" value={newSocio.nombre || ''} onChange={e => setNewSocio({...newSocio, nombre: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Apellido</label>
+                  <input required className="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold outline-none focus:border-primary" value={newSocio.apellido || ''} onChange={e => setNewSocio({...newSocio, apellido: e.target.value})} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
+                <select className="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold" value={newSocio.categoria} onChange={e => setNewSocio({...newSocio, categoria: e.target.value as Category})}>
+                  {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tutor</label>
+                <input required className="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold outline-none" value={newSocio.nombreTutor || ''} onChange={e => setNewSocio({...newSocio, nombreTutor: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">WhatsApp</label>
+                <input required className="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold outline-none" value={newSocio.telefonoTutor || ''} onChange={e => setNewSocio({...newSocio, telefonoTutor: e.target.value})} />
+              </div>
+              <button type="submit" disabled={creatingSocio} className="w-full bg-emerald-500 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 mt-4 flex items-center justify-center space-x-2">
+                {creatingSocio ? <Loader2 className="animate-spin" size={20} /> : <span>REGISTRAR Y PRESENTAR</span>}
+              </button>
+            </form>
           </div>
         </div>
       )}
