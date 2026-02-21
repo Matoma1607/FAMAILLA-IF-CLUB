@@ -17,7 +17,7 @@ const request = async (action: string, data?: any) => {
   try {
     if (action.startsWith('obtener') || action === 'validarUsuario') {
       const emailParam = action === 'validarUsuario' ? data?.email : userToken;
-      const response = await fetch(`${GAS_URL}?action=${action}&userToken=${emailParam}`);
+      const response = await fetch(`${GAS_URL}?action=${action}&userToken=${emailParam}&t=${Date.now()}`);
       
       const responseData = await response.json().catch(() => ({}));
       if (!response.ok) {

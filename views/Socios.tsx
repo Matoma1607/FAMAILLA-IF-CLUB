@@ -118,9 +118,9 @@ const Socios = () => {
 
   const getPaymentStatus = (socioId: string) => {
     const pago = pagos.find(p => 
-      String(p.socioId) === String(socioId) && 
-      p.mes === mesActual && 
-      p.anio === anioActual &&
+      String(p.socioId).trim() === String(socioId).trim() && 
+      String(p.mes).trim() === String(mesActual).trim() && 
+      String(p.anio).trim() === String(anioActual).trim() &&
       p.estado === 'PAGADO'
     );
     return !!pago;
