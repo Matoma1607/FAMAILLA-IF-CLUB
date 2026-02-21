@@ -62,7 +62,7 @@ const Entrenamientos = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Diario Técnico</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Planificacion Diaria</h2>
           <p className="text-slate-500">Agenda de FAMAILLA IF (Entrenamientos y Partidos).</p>
         </div>
         <button onClick={() => { setEditingEnt({ tipo: 'Entrenamiento', dia: '', hora: '', lugar: '', profesor: '', categoria: Category.CEBOLLITAS }); setIsModalOpen(true); }} className="bg-primary text-white px-8 py-3 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all">

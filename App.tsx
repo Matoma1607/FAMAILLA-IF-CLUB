@@ -138,7 +138,7 @@ const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.Rea
             <SidebarItem to="/socios" icon={Users} label="Alumnos" active={location.pathname === '/socios'} />
             <SidebarItem to="/asistencia" icon={ClipboardCheck} label="Asistencia" active={location.pathname === '/asistencia'} />
             {isOwner && <SidebarItem to="/pagos" icon={CreditCard} label="Finanzas" active={location.pathname === '/pagos'} />}
-            <SidebarItem to="/entrenamientos" icon={CalendarDays} label="Diario Técnico" active={location.pathname === '/entrenamientos'} />
+            <SidebarItem to="/entrenamientos" icon={CalendarDays} label="Planificacion Diaria" active={location.pathname === '/entrenamientos'} />
           </nav>
 
           <div className="pt-6 border-t border-white/10">
