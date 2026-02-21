@@ -13,7 +13,8 @@ const Pagos = () => {
   const [processing, setProcessing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingPago, setEditingPago] = useState<Partial<Pago> | null>(null);
+  const [editingPago, setEditingPago] = useState<Partial<Pago> & { selectedMeses?: string[] } | null>(null);
+  const [isMultiMonth, setIsMultiMonth] = useState(false);
   const [filterMetodo, setFilterMetodo] = useState<'TODOS' | 'EFECTIVO' | 'TRANSFERENCIA'>('TODOS');
 
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -41,9 +42,23 @@ const Pagos = () => {
     if (!editingPago?.socioId) return;
     setProcessing(true);
     try {
-      await registrarPago(editingPago);
+      if (isMultiMonth && editingPago.selectedMeses && editingPago.selectedMeses.length > 0) {
+        const montoPorMes = (Number(editingPago.monto) || 0) / editingPago.selectedMeses.length;
+        const promises = editingPago.selectedMeses.map(m => 
+          registrarPago({
+            ...editingPago,
+            mes: m,
+            monto: montoPorMes,
+            nota: `${editingPago.nota || 'Cuota'} (${editingPago.selectedMeses?.join(', ')})`
+          })
+        );
+        await Promise.all(promises);
+      } else {
+        await registrarPago(editingPago);
+      }
       setIsModalOpen(false);
       setEditingPago(null);
+      setIsMultiMonth(false);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -97,7 +112,11 @@ const Pagos = () => {
           <p className="text-slate-500">Control de cuotas y cobros de FAMAILLA IF.</p>
         </div>
         <button 
-          onClick={() => { setEditingPago({ mes: mesActual, anio: anioActual, monto: 8500, estado: 'PAGADO', metodo: 'EFECTIVO' }); setIsModalOpen(true); }} 
+          onClick={() => { 
+            setEditingPago({ mes: mesActual, anio: anioActual, monto: 8500, estado: 'PAGADO', metodo: 'EFECTIVO', selectedMeses: [mesActual] }); 
+            setIsMultiMonth(false);
+            setIsModalOpen(true); 
+          }} 
           className="bg-primary text-white px-6 py-3 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all w-full sm:w-auto justify-center"
         >
           <Plus size={18} />
@@ -240,9 +259,27 @@ const Pagos = () => {
                  <h3 className="text-xl font-bold text-secondary">{editingPago?.id ? 'Editar Cobro' : 'Registrar Cobro'}</h3>
                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tesorería Famaillá IF</p>
                </div>
-               <button onClick={() => { setIsModalOpen(false); setEditingPago(null); }} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
+               <button onClick={() => { setIsModalOpen(false); setEditingPago(null); setIsMultiMonth(false); }} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
             </div>
             <form onSubmit={handleSave} className="space-y-5">
+              {!editingPago?.id && (
+                <div className="flex items-center space-x-2 mb-4">
+                  <input 
+                    type="checkbox" 
+                    id="multiMonth" 
+                    checked={isMultiMonth} 
+                    onChange={(e) => {
+                      setIsMultiMonth(e.target.checked);
+                      if (e.target.checked) {
+                        setEditingPago(prev => ({ ...prev, selectedMeses: [prev?.mes || mesActual] }));
+                      }
+                    }}
+                    className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+                  />
+                  <label htmlFor="multiMonth" className="text-xs font-bold text-slate-600 uppercase tracking-widest cursor-pointer">Cobrar varios meses</label>
+                </div>
+              )}
+
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alumno</label>
                 <select 
@@ -265,39 +302,76 @@ const Pagos = () => {
                   onChange={e => setEditingPago({...editingPago, nota: e.target.value})} 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Mes</label>
-                  <select 
-                    required 
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none" 
-                    value={editingPago?.mes || ""} 
-                    onChange={e => setEditingPago({...editingPago, mes: e.target.value})}
-                  >
-                    {meses.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
+
+              {isMultiMonth ? (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seleccionar Meses</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {meses.map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          const current = editingPago?.selectedMeses || [];
+                          const next = current.includes(m) 
+                            ? current.filter(x => x !== m)
+                            : [...current, m];
+                          setEditingPago({ ...editingPago, selectedMeses: next });
+                        }}
+                        className={`py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
+                          editingPago?.selectedMeses?.includes(m)
+                            ? 'bg-primary text-white border-primary shadow-md'
+                            : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-200'
+                        }`}
+                      >
+                        {m.slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Año</label>
-                  <input 
-                    type="number" 
-                    required 
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none" 
-                    value={editingPago?.anio || anioActual} 
-                    onChange={e => setEditingPago({...editingPago, anio: Number(e.target.value)})} 
-                  />
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Mes</label>
+                    <select 
+                      required 
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none" 
+                      value={editingPago?.mes || ""} 
+                      onChange={e => setEditingPago({...editingPago, mes: e.target.value})}
+                    >
+                      {meses.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Año</label>
+                    <input 
+                      type="number" 
+                      required 
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none" 
+                      value={editingPago?.anio || anioActual} 
+                      onChange={e => setEditingPago({...editingPago, anio: Number(e.target.value)})} 
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Monto ($)</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                  {isMultiMonth ? 'Monto Total por todos los meses ($)' : 'Monto ($)'}
+                </label>
                 <input 
                   type="number" 
                   required 
-                  placeholder="8500" 
+                  placeholder={isMultiMonth ? "25500" : "8500"} 
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-lg outline-none focus:border-primary transition-all" 
                   value={editingPago?.monto || ""} 
                   onChange={e => setEditingPago({...editingPago, monto: Number(e.target.value)})} 
                 />
+                {isMultiMonth && editingPago?.selectedMeses && editingPago.selectedMeses.length > 0 && (
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 italic">
+                    Se crearán {editingPago.selectedMeses.length} registros de ${(Number(editingPago.monto || 0) / editingPago.selectedMeses.length).toFixed(0)} cada uno.
+                  </p>
+                )}
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método de Pago</label>
