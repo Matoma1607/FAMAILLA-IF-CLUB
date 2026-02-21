@@ -79,10 +79,11 @@ const Socios = () => {
     `${s.nombre || ''} ${s.apellido || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getWhatsAppLink = (phone: any) => {
+  const getWhatsAppLink = (phone: any, isVencido: boolean = false) => {
     if (!phone) return '#';
     const cleanPhone = String(phone).replace(/\D/g, '');
-    return `https://wa.me/${cleanPhone}`;
+    const message = isVencido ? encodeURIComponent("TU MENSUAL ESTÁ VENCIDO, RECORDÁ ABONAR") : "";
+    return `https://wa.me/${cleanPhone}${message ? `?text=${message}` : ''}`;
   };
 
   const formatDate = (dateStr: string) => {
@@ -174,14 +175,14 @@ const Socios = () => {
                     </td>
                     <td className="px-8 py-5">
                       <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                        {isPaid ? <Check size={14} strokeWidth={3} /> : <Clock size={12} />}
+                        <Check size={14} strokeWidth={3} />
                         <span>{isPaid ? 'AL DÍA' : 'VENCIDO'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="flex justify-end space-x-2">
                         <a 
-                          href={getWhatsAppLink(socio.telefonoTutor)} 
+                          href={getWhatsAppLink(socio.telefonoTutor, !isPaid)} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
