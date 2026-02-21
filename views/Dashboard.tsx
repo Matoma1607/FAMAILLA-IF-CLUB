@@ -71,11 +71,13 @@ const Dashboard = () => {
           return !pago;
         });
 
+        const totalAlDia = socios.length - listaDeudores.length;
+
         const recaudacion = (pagos || []).filter(p => p.estado === 'PAGADO').reduce((acc, curr) => acc + (Number(curr.monto) || 0), 0);
 
         setStats({
           total: (socios || []).length,
-          activos: (socios || []).filter(s => s.activo).length,
+          activos: totalAlDia,
           deudores: listaDeudores.length,
           recaudacion: recaudacion
         });
