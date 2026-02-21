@@ -29,6 +29,7 @@ export interface Pago {
   estado: 'PAGADO' | 'PENDIENTE';
   metodo?: 'EFECTIVO' | 'TRANSFERENCIA';
   nombreSocio?: string;
+  nota?: string;
 }
 
 export interface Entrenamiento {

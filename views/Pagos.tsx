@@ -168,6 +168,7 @@ const Pagos = () => {
             <thead className="bg-slate-50/50">
               <tr>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Alumno</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Concepto</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Período</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Monto</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Método</th>
@@ -186,6 +187,11 @@ const Pagos = () => {
                   <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-5 font-bold text-slate-900">
                       {socio ? `${socio.nombre} ${socio.apellido}` : `ID: ${p.socioId}`}
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="text-[10px] font-black text-primary uppercase tracking-widest">
+                        {p.nota || 'Cuota Mensual'}
+                      </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="text-[10px] font-black text-slate-500 uppercase tracking-tighter bg-slate-100 inline-block px-2 py-1 rounded-lg">
@@ -248,6 +254,16 @@ const Pagos = () => {
                   <option value="">Seleccionar Alumno...</option>
                   {socios.map(s => <option key={s.id} value={s.id}>{s.nombre} {s.apellido}</option>)}
                 </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Concepto / Nota</label>
+                <input 
+                  type="text" 
+                  placeholder="Ej: Cuota Marzo, Inscripción, Ropa..." 
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" 
+                  value={editingPago?.nota || ""} 
+                  onChange={e => setEditingPago({...editingPago, nota: e.target.value})} 
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
