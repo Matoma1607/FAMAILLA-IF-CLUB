@@ -51,9 +51,9 @@ const Socios = () => {
     try {
       const isNew = !editingSocio?.id;
       const savedSocio = await saveSocio(editingSocio);
-      const socioId = editingSocio?.id || savedSocio?.id || `S-${Date.now()}`; // Fallback if server doesn't return ID
+      const socioId = savedSocio?.id; 
 
-      if (isNew) {
+      if (isNew && socioId) {
         // Registrar pagos iniciales si se seleccionaron
         const paymentPromises = [];
         if (initialPayments.inscripcion) {

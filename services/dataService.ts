@@ -58,8 +58,10 @@ export const getSocios = async (): Promise<Socio[]> => {
 };
 
 export const saveSocio = async (socio: any) => {
-  const payload = { ...socio, id: socio.id || `S-${Date.now()}` };
-  return await request('guardarSocio', payload);
+  const id = socio.id || `S-${Date.now()}`;
+  const payload = { ...socio, id };
+  const res = await request('guardarSocio', payload);
+  return { ...res, id };
 };
 
 export const deleteSocio = async (id: string) => {
@@ -72,8 +74,10 @@ export const getPagos = async (): Promise<Pago[]> => {
 };
 
 export const registrarPago = async (pago: any) => {
-  const payload = { ...pago, id: pago.id || `P-${Date.now()}` };
-  return await request('guardarPago', payload);
+  const id = pago.id || `P-${Date.now()}`;
+  const payload = { ...pago, id };
+  const res = await request('guardarPago', payload);
+  return { ...res, id };
 };
 
 export const updateEstadoPago = async (id: string, estado: string) => {
