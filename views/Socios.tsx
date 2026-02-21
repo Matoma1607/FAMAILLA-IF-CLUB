@@ -95,7 +95,12 @@ const Socios = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Plantel de Jugadores</h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-2xl font-bold text-slate-900">Plantel de Jugadores</h2>
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-black">
+              {socios.length} TOTAL
+            </span>
+          </div>
           <p className="text-slate-500">Control de estados y pagos de {mesActual} {anioActual}.</p>
         </div>
         <div className="flex space-x-2">
