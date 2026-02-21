@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, CheckCircle, Clock, Calendar
+  Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, Check, Clock, Calendar
 } from 'lucide-react';
 import { getSocios, saveSocio, deleteSocio, getPagos } from '../services/dataService';
 import { Socio, Category, Pago } from '../types';
@@ -174,7 +174,7 @@ const Socios = () => {
                     </td>
                     <td className="px-8 py-5">
                       <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                        {isPaid ? <CheckCircle size={12} /> : <Clock size={12} />}
+                        {isPaid ? <Check size={14} strokeWidth={3} /> : <Clock size={12} />}
                         <span>{isPaid ? 'AL DÍA' : 'VENCIDO'}</span>
                       </div>
                     </td>
