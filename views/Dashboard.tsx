@@ -120,7 +120,9 @@ const Dashboard = () => {
         <Link to="/socios" className="block transition-transform hover:scale-[1.02] active:scale-[0.98]">
           <StatCard title="Vencidos este mes" value={stats.deudores} icon={AlertCircle} colorClass="bg-rose-600" />
         </Link>
-        <StatCard title="Caja Total" value={`$${stats.recaudacion.toLocaleString()}`} icon={DollarSign} colorClass="bg-emerald-600" />
+        <Link to="/pagos" className="block transition-transform hover:scale-[1.02] active:scale-[0.98]">
+          <StatCard title="Caja Total" value={`$${stats.recaudacion.toLocaleString()}`} icon={DollarSign} colorClass="bg-emerald-600" />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

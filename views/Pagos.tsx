@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  CreditCard, Search, Plus, Loader2, X, Trash2, Edit2
+  CreditCard, Search, Plus, Loader2, X, Trash2, Edit2, DollarSign, Wallet, ArrowRightLeft
 } from 'lucide-react';
 import { getPagos, getSocios, registrarPago, updateEstadoPago, deletePago } from '../services/dataService';
 import { Pago, Socio } from '../types';
@@ -80,6 +80,10 @@ const Pagos = () => {
     return `${socio.nombre} ${socio.apellido}`.toLowerCase().includes(term);
   });
 
+  const totalCaja = pagos.filter(p => p.estado === 'PAGADO').reduce((acc, p) => acc + Number(p.monto), 0);
+  const totalEfectivo = pagos.filter(p => p.estado === 'PAGADO' && p.metodo === 'EFECTIVO').reduce((acc, p) => acc + Number(p.monto), 0);
+  const totalTransferencia = pagos.filter(p => p.estado === 'PAGADO' && p.metodo === 'TRANSFERENCIA').reduce((acc, p) => acc + Number(p.monto), 0);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -88,12 +92,36 @@ const Pagos = () => {
           <p className="text-slate-500">Control de cuotas y cobros de FAMAILLA IF.</p>
         </div>
         <button 
-          onClick={() => { setEditingPago({ mes: mesActual, anio: anioActual, monto: 8500, estado: 'PAGADO' }); setIsModalOpen(true); }} 
+          onClick={() => { setEditingPago({ mes: mesActual, anio: anioActual, monto: 8500, estado: 'PAGADO', metodo: 'EFECTIVO' }); setIsModalOpen(true); }} 
           className="bg-primary text-white px-6 py-3 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all w-full sm:w-auto justify-center"
         >
           <Plus size={18} />
           <span>Nuevo Cobro</span>
         </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-emerald-500 text-white rounded-lg"><DollarSign size={20} /></div>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Caja Total</span>
+          </div>
+          <p className="text-2xl font-black text-secondary">${totalCaja.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-primary text-white rounded-lg"><Wallet size={20} /></div>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Efectivo</span>
+          </div>
+          <p className="text-2xl font-black text-secondary">${totalEfectivo.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-secondary text-white rounded-lg"><ArrowRightLeft size={20} /></div>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Transferencia</span>
+          </div>
+          <p className="text-2xl font-black text-secondary">${totalTransferencia.toLocaleString()}</p>
+        </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
@@ -117,6 +145,7 @@ const Pagos = () => {
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Alumno</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Período</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Monto</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Método</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 text-center">Estado</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 text-right">Acciones</th>
               </tr>
@@ -140,6 +169,11 @@ const Pagos = () => {
                     </td>
                     <td className="px-8 py-5 font-black text-slate-900 text-lg tracking-tighter">
                       ${Number(p.monto).toLocaleString()}
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${p.metodo === 'TRANSFERENCIA' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+                        {p.metodo || 'S/D'}
+                      </span>
                     </td>
                     <td className="px-8 py-5 text-center">
                       <button 
@@ -223,6 +257,18 @@ const Pagos = () => {
                   value={editingPago?.monto || ""} 
                   onChange={e => setEditingPago({...editingPago, monto: Number(e.target.value)})} 
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método de Pago</label>
+                <select 
+                  required 
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none" 
+                  value={editingPago?.metodo || "EFECTIVO"} 
+                  onChange={e => setEditingPago({...editingPago, metodo: e.target.value as any})}
+                >
+                  <option value="EFECTIVO">Efectivo</option>
+                  <option value="TRANSFERENCIA">Transferencia</option>
+                </select>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-1 text-center block">Estado Inicial</label>
