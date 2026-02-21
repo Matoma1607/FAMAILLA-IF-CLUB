@@ -14,6 +14,7 @@ const Pagos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPago, setEditingPago] = useState<Partial<Pago> | null>(null);
+  const [filterMetodo, setFilterMetodo] = useState<'TODOS' | 'EFECTIVO' | 'TRANSFERENCIA'>('TODOS');
 
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const now = new Date();
@@ -73,16 +74,20 @@ const Pagos = () => {
   };
 
   const filteredPagos = pagos.filter(p => {
-    const socio = socios.find(s => String(s.id) === String(p.socioId));
+    const socio = socios.find(s => String(s.id).trim() === String(p.socioId).trim());
     const term = searchTerm.toLowerCase();
+    
+    // Filtro por método
+    if (filterMetodo !== 'TODOS' && p.metodo !== filterMetodo) return false;
+
     if (!term) return true;
     if (!socio) return false;
     return `${socio.nombre} ${socio.apellido}`.toLowerCase().includes(term);
   });
 
-  const totalCaja = pagos.filter(p => p.estado === 'PAGADO').reduce((acc, p) => acc + Number(p.monto), 0);
-  const totalEfectivo = pagos.filter(p => p.estado === 'PAGADO' && p.metodo === 'EFECTIVO').reduce((acc, p) => acc + Number(p.monto), 0);
-  const totalTransferencia = pagos.filter(p => p.estado === 'PAGADO' && p.metodo === 'TRANSFERENCIA').reduce((acc, p) => acc + Number(p.monto), 0);
+  const totalCaja = pagos.filter(p => p.estado === 'PAGADO').reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
+  const totalEfectivo = pagos.filter(p => p.estado === 'PAGADO' && String(p.metodo).trim().toUpperCase() === 'EFECTIVO').reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
+  const totalTransferencia = pagos.filter(p => p.estado === 'PAGADO' && String(p.metodo).trim().toUpperCase() === 'TRANSFERENCIA').reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -101,32 +106,43 @@ const Pagos = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <button 
+          onClick={() => setFilterMetodo('TODOS')}
+          className={`p-6 rounded-2xl border transition-all text-left ${filterMetodo === 'TODOS' ? 'bg-emerald-50 border-emerald-200 ring-2 ring-emerald-500/20' : 'bg-white border-slate-100 shadow-sm hover:border-emerald-200'}`}
+        >
           <div className="flex items-center space-x-3 mb-2">
-            <div className="p-2 bg-emerald-500 text-white rounded-lg"><DollarSign size={20} /></div>
+            <div className={`p-2 rounded-lg ${filterMetodo === 'TODOS' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}><DollarSign size={20} /></div>
             <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Caja Total</span>
           </div>
           <p className="text-2xl font-black text-secondary">${totalCaja.toLocaleString()}</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        </button>
+
+        <button 
+          onClick={() => setFilterMetodo('EFECTIVO')}
+          className={`p-6 rounded-2xl border transition-all text-left ${filterMetodo === 'EFECTIVO' ? 'bg-primary/5 border-primary/20 ring-2 ring-primary/20' : 'bg-white border-slate-100 shadow-sm hover:border-primary/20'}`}
+        >
           <div className="flex items-center space-x-3 mb-2">
-            <div className="p-2 bg-primary text-white rounded-lg"><Wallet size={20} /></div>
+            <div className={`p-2 rounded-lg ${filterMetodo === 'EFECTIVO' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}><Wallet size={20} /></div>
             <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Efectivo</span>
           </div>
           <p className="text-2xl font-black text-secondary">${totalEfectivo.toLocaleString()}</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        </button>
+
+        <button 
+          onClick={() => setFilterMetodo('TRANSFERENCIA')}
+          className={`p-6 rounded-2xl border transition-all text-left ${filterMetodo === 'TRANSFERENCIA' ? 'bg-secondary/5 border-secondary/20 ring-2 ring-secondary/20' : 'bg-white border-slate-100 shadow-sm hover:border-secondary/20'}`}
+        >
           <div className="flex items-center space-x-3 mb-2">
-            <div className="p-2 bg-secondary text-white rounded-lg"><ArrowRightLeft size={20} /></div>
+            <div className={`p-2 rounded-lg ${filterMetodo === 'TRANSFERENCIA' ? 'bg-secondary text-white' : 'bg-slate-100 text-slate-400'}`}><ArrowRightLeft size={20} /></div>
             <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Transferencia</span>
           </div>
           <p className="text-2xl font-black text-secondary">${totalTransferencia.toLocaleString()}</p>
-        </div>
+        </button>
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50">
-          <div className="relative max-w-sm">
+        <div className="p-6 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="relative max-w-sm w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
             <input 
               type="text" 
@@ -136,6 +152,15 @@ const Pagos = () => {
               onChange={e => setSearchTerm(e.target.value)} 
             />
           </div>
+          {filterMetodo !== 'TODOS' && (
+            <button 
+              onClick={() => setFilterMetodo('TODOS')}
+              className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-4 py-2 rounded-full flex items-center space-x-2"
+            >
+              <span>Filtrado por: {filterMetodo}</span>
+              <X size={14} />
+            </button>
+          )}
         </div>
         
         <div className="overflow-x-auto no-scrollbar">
