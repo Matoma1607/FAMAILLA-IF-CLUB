@@ -1,7 +1,7 @@
 
 import { Socio, Pago, Entrenamiento, Asistencia, Foto, FechaLiga } from '../types';
 
-export const GAS_URL = 'https://script.google.com/macros/s/AKfycbziAbKgvhkgXexKVfi5xNLZ8VtVCCaaYPUt_AMVTLCfQ262M1PO6i5HB6YjYWZF9Jae/exec';
+export const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJstzbePJoG9MP5fSHv13-F9wTzRfmpwfjxo87y_YFktDiHwCMrGhJMZjK_5XH114/exec';
 
 const getUserToken = () => {
   const session = localStorage.getItem('peques_session');
