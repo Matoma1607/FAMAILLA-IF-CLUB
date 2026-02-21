@@ -26,6 +26,7 @@ export interface Pago {
   anio: number;
   monto: number;
   estado: 'PAGADO' | 'PENDIENTE';
+  metodo?: 'EFECTIVO' | 'TRANSFERENCIA';
   nombreSocio?: string;
 }
 
@@ -47,4 +48,12 @@ export interface Asistencia {
   fecha: string;
   presente: boolean;
   categoria: string;
+}
+
+// Added Foto interface for the gallery view
+export interface Foto {
+  id: string;
+  url: string;
+  descripcion: string;
+  fecha: string;
 }
