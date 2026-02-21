@@ -51,6 +51,16 @@ export interface Asistencia {
   categoria: string;
 }
 
+export interface FechaLiga {
+  id: string;
+  rival: string;
+  fecha: string;
+  hora: string;
+  lugar: string;
+  categoria: string;
+  condicion: 'LOCAL' | 'VISITANTE';
+}
+
 // Added Foto interface for the gallery view
 export interface Foto {
   id: string;

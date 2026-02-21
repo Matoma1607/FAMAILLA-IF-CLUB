@@ -6,6 +6,7 @@ import Socios from './views/Socios';
 import Pagos from './views/Pagos';
 import Entrenamientos from './views/Entrenamientos';
 import AsistenciaView from './views/Asistencia';
+import FechaLigaView from './views/FechaLiga';
 import { GAS_URL } from './services/dataService';
 import { 
   LayoutDashboard, 
@@ -17,7 +18,8 @@ import {
   ChevronRight,
   ClipboardCheck,
   ShieldCheck,
-  Loader2
+  Loader2,
+  Trophy
 } from 'lucide-react';
 
 const SidebarItem: React.FC<{ to: string, icon: React.ElementType, label: string, active: boolean }> = ({ to, icon: Icon, label, active }) => (
@@ -134,6 +136,7 @@ const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.Rea
           </div>
 
           <nav className="flex-1 space-y-2">
+            <SidebarItem to="/fecha-liga" icon={Trophy} label="Fecha de Liga" active={location.pathname === '/fecha-liga'} />
             {isOwner && <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" active={location.pathname === '/'} />}
             <SidebarItem to="/socios" icon={Users} label="Alumnos" active={location.pathname === '/socios'} />
             <SidebarItem to="/asistencia" icon={ClipboardCheck} label="Asistencia" active={location.pathname === '/asistencia'} />
@@ -192,7 +195,8 @@ const App = () => {
     <HashRouter>
       <AppLayout user={user} onLogout={handleLogout}>
         <Routes>
-          <Route path="/" element={user.rol === 'owner' ? <Dashboard /> : <Navigate to="/asistencia" />} />
+          <Route path="/fecha-liga" element={<FechaLigaView isOwner={user.rol === 'owner'} />} />
+          <Route path="/" element={user.rol === 'owner' ? <Dashboard /> : <Navigate to="/fecha-liga" />} />
           <Route path="/socios" element={<Socios />} />
           <Route path="/asistencia" element={<AsistenciaView />} />
           <Route path="/pagos" element={user.rol === 'owner' ? <Pagos /> : <Navigate to="/asistencia" />} />

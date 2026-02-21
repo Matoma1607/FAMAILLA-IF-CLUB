@@ -1,7 +1,7 @@
 
-import { Socio, Pago, Entrenamiento, Asistencia } from '../types';
+import { Socio, Pago, Entrenamiento, Asistencia, Foto, FechaLiga } from '../types';
 
-export const GAS_URL = 'https://script.google.com/macros/s/AKfycbwip-ybLaJUgiFGQXeXxOCcR_YAsmF4DxL28Xkex9uR8qf0qTE_DFAJzG49F41G3SMr/exec';
+export const GAS_URL = 'https://script.google.com/macros/s/AKfycbxF-CCdHCjN7hx82LfUN5TQ4eVwukOQm71aQdORQHGBnqCACsAahc0PEAjahCGFngG1BA/exec';
 
 const getUserToken = () => {
   const session = localStorage.getItem('peques_session');
@@ -105,4 +105,33 @@ export const getAsistencia = async (): Promise<Asistencia[]> => {
 
 export const saveAsistencia = async (batch: any[]) => {
   return await request('guardarAsistencia', batch);
+};
+
+// Added Photo service functions to support Galeria view
+export const getFotos = async (): Promise<Foto[]> => {
+  const res = await request('obtenerFotos');
+  return Array.isArray(res) ? res : [];
+};
+
+export const saveFoto = async (foto: any) => {
+  const payload = { ...foto, id: foto.id || `F-${Date.now()}`, fecha: new Date().toISOString() };
+  return await request('guardarFoto', payload);
+};
+
+export const deleteFoto = async (id: string) => {
+  return await request('eliminarFila', { sheet: 'Fotos', id });
+};
+
+export const getFechasLiga = async (): Promise<FechaLiga[]> => {
+  const res = await request('obtenerFechasLiga');
+  return Array.isArray(res) ? res : [];
+};
+
+export const saveFechaLiga = async (fecha: any) => {
+  const payload = { ...fecha, id: fecha.id || `L-${Date.now()}` };
+  return await request('guardarFechaLiga', payload);
+};
+
+export const deleteFechaLiga = async (id: string) => {
+  return await request('eliminarFila', { sheet: 'FechasLiga', id });
 };
