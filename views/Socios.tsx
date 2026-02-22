@@ -3,12 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { 
   Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, Check, Clock, Calendar
 } from 'lucide-react';
-import { getSocios, saveSocio, deleteSocio, getPagos, registrarPago, deletePago } from '../services/dataService';
-import { Socio, Category, Pago } from '../types';
+import { getSocios, saveSocio, deleteSocio, getPagos, registrarPago, deletePago, getAsistencia, deleteAsistencia } from '../services/dataService';
+import { Socio, Category, Pago, Asistencia } from '../types';
 
 const Socios = () => {
   const [socios, setSocios] = useState<Socio[]>([]);
   const [pagos, setPagos] = useState<Pago[]>([]);
+  const [asistencias, setAsistencias] = useState<Asistencia[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,9 +35,10 @@ const Socios = () => {
     setLoading(true);
     setError(null);
     try {
-      const [dataSocios, dataPagos] = await Promise.all([getSocios(), getPagos()]);
+      const [dataSocios, dataPagos, dataAsis] = await Promise.all([getSocios(), getPagos(), getAsistencia()]);
       setSocios(dataSocios || []);
       setPagos(dataPagos || []);
+      setAsistencias(dataAsis || []);
     } catch (e: any) { 
       console.error("Error en fetchData:", e);
       setError(`Falla de servidor: ${e.message}`);
@@ -91,18 +93,26 @@ const Socios = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("¿Confirmas la eliminación definitiva del alumno y todos sus registros de pago?")) {
+    if (window.confirm("¿Confirmas la eliminación definitiva del alumno y todos sus registros (Pagos y Asistencias)?")) {
       setLoading(true);
       try {
         // 1. Buscar todos los pagos del socio
         const pagosSocio = pagos.filter(p => String(p.socioId).trim() === String(id).trim());
         
-        // 2. Borrar cada pago en el servidor
+        // 2. Buscar todas las asistencias del socio
+        const asistenciasSocio = asistencias.filter(a => String(a.socioId).trim() === String(id).trim());
+
+        // 3. Borrar cada pago en el servidor
         if (pagosSocio.length > 0) {
           await Promise.all(pagosSocio.map(p => deletePago(p.id)));
         }
 
-        // 3. Borrar el socio
+        // 4. Borrar cada asistencia en el servidor
+        if (asistenciasSocio.length > 0) {
+          await Promise.all(asistenciasSocio.map(a => deleteAsistencia(a.id)));
+        }
+
+        // 5. Borrar el socio
         await deleteSocio(id);
         
         fetchData();

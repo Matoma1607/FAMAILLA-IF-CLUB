@@ -111,6 +111,10 @@ export const saveAsistencia = async (batch: any[]) => {
   return await request('guardarAsistencia', batch);
 };
 
+export const deleteAsistencia = async (id: string) => {
+  return await request('eliminarFila', { sheet: 'Asistencia', id });
+};
+
 // Added Photo service functions to support Galeria view
 export const getFotos = async (): Promise<Foto[]> => {
   const res = await request('obtenerFotos');
