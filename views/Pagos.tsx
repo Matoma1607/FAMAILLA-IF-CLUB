@@ -41,6 +41,10 @@ const Pagos = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPago?.socioId) return;
+    
+    const socio = socios.find(s => String(s.id) === String(editingPago.socioId));
+    const nombreSocio = socio ? `${socio.nombre} ${socio.apellido}` : '';
+    
     setProcessing(true);
     try {
       if (isMultiMonth && editingPago.selectedMeses && editingPago.selectedMeses.length > 0) {
@@ -48,6 +52,7 @@ const Pagos = () => {
         const promises = editingPago.selectedMeses.map(m => 
           registrarPago({
             ...editingPago,
+            nombreSocio,
             mes: m,
             monto: montoPorMes,
             nota: `${editingPago.nota || 'Cuota'} (${editingPago.selectedMeses?.join(', ')})`
@@ -55,7 +60,7 @@ const Pagos = () => {
         );
         await Promise.all(promises);
       } else {
-        await registrarPago(editingPago);
+        await registrarPago({ ...editingPago, nombreSocio });
       }
       setIsModalOpen(false);
       setEditingPago(null);
@@ -287,7 +292,7 @@ const Pagos = () => {
                 return (
                   <tr key={p.ids.join('-')} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-5 font-bold text-slate-900">
-                      {socio ? `${socio.nombre} ${socio.apellido}` : `ID: ${p.socioId}`}
+                      {socio ? `${socio.nombre} ${socio.apellido}` : (p.nombreSocio || `ID: ${p.socioId}`)}
                     </td>
                     <td className="px-8 py-5">
                       <div className="text-[10px] font-black text-primary uppercase tracking-widest">
