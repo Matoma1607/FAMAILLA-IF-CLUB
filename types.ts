@@ -47,6 +47,7 @@ export interface Entrenamiento {
 export interface Asistencia {
   id: string;
   socioId: string;
+  nombreSocio?: string;
   fecha: string;
   presente: boolean;
   categoria: string;
