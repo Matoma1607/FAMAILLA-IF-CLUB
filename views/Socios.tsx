@@ -66,7 +66,7 @@ const Socios = () => {
 
         if (conceptos.length > 0 && editingSocio) {
           await registrarPago({
-            socioId,
+            socioId: String(socioId).trim(),
             nombreSocio: `${editingSocio.nombre} ${editingSocio.apellido}`,
             mes: mesActual,
             anio: anioActual,
