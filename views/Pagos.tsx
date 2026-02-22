@@ -341,166 +341,173 @@ const Pagos = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 my-auto animate-fade-in relative">
-            <div className="flex justify-between items-center mb-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
                <div>
                  <h3 className="text-xl font-bold text-secondary">{editingPago?.id ? 'Editar Cobro' : 'Registrar Cobro'}</h3>
                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tesorería Famaillá IF</p>
                </div>
                <button onClick={() => { setIsModalOpen(false); setEditingPago(null); setIsMultiMonth(false); }} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
             </div>
-            <form onSubmit={handleSave} className="space-y-5">
-              {!editingPago?.id && (
-                <div className="flex items-center space-x-2 mb-4">
+            
+            <div className="overflow-y-auto p-6 custom-scrollbar">
+              <form onSubmit={handleSave} className="space-y-4">
+                {!editingPago?.id && (
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input 
+                      type="checkbox" 
+                      id="multiMonth" 
+                      checked={isMultiMonth} 
+                      onChange={(e) => {
+                        setIsMultiMonth(e.target.checked);
+                        if (e.target.checked) {
+                          setEditingPago(prev => ({ ...prev, selectedMeses: [prev?.mes || mesActual] }));
+                        }
+                      }}
+                      className="w-3.5 h-3.5 text-primary rounded border-slate-300 focus:ring-primary"
+                    />
+                    <label htmlFor="multiMonth" className="text-[10px] font-bold text-slate-600 uppercase tracking-widest cursor-pointer">Cobrar varios meses</label>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alumno</label>
+                  <select 
+                    required 
+                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all appearance-none text-sm" 
+                    value={editingPago?.socioId || ""} 
+                    onChange={e => setEditingPago({...editingPago, socioId: e.target.value})}
+                  >
+                    <option value="">Seleccionar Alumno...</option>
+                    {socios.map(s => <option key={s.id} value={s.id}>{s.nombre} {s.apellido}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Concepto / Nota</label>
                   <input 
-                    type="checkbox" 
-                    id="multiMonth" 
-                    checked={isMultiMonth} 
-                    onChange={(e) => {
-                      setIsMultiMonth(e.target.checked);
-                      if (e.target.checked) {
-                        setEditingPago(prev => ({ ...prev, selectedMeses: [prev?.mes || mesActual] }));
-                      }
-                    }}
-                    className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+                    type="text" 
+                    placeholder="Ej: Cuota Marzo, Inscripción, Ropa..." 
+                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" 
+                    value={editingPago?.nota || ""} 
+                    onChange={e => setEditingPago({...editingPago, nota: e.target.value})} 
                   />
-                  <label htmlFor="multiMonth" className="text-xs font-bold text-slate-600 uppercase tracking-widest cursor-pointer">Cobrar varios meses</label>
                 </div>
-              )}
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alumno</label>
-                <select 
-                  required 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all appearance-none" 
-                  value={editingPago?.socioId || ""} 
-                  onChange={e => setEditingPago({...editingPago, socioId: e.target.value})}
-                >
-                  <option value="">Seleccionar Alumno...</option>
-                  {socios.map(s => <option key={s.id} value={s.id}>{s.nombre} {s.apellido}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Concepto / Nota</label>
-                <input 
-                  type="text" 
-                  placeholder="Ej: Cuota Marzo, Inscripción, Ropa..." 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" 
-                  value={editingPago?.nota || ""} 
-                  onChange={e => setEditingPago({...editingPago, nota: e.target.value})} 
-                />
-              </div>
-
-              {isMultiMonth ? (
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seleccionar Meses</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {meses.map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => {
-                          const current = editingPago?.selectedMeses || [];
-                          const next = current.includes(m) 
-                            ? current.filter(x => x !== m)
-                            : [...current, m];
-                          setEditingPago({ ...editingPago, selectedMeses: next });
-                        }}
-                        className={`py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
-                          editingPago?.selectedMeses?.includes(m)
-                            ? 'bg-primary text-white border-primary shadow-md'
-                            : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-200'
-                        }`}
+                {isMultiMonth ? (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Seleccionar Meses</label>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {meses.map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => {
+                            const current = editingPago?.selectedMeses || [];
+                            const next = current.includes(m) 
+                              ? current.filter(x => x !== m)
+                              : [...current, m];
+                            setEditingPago({ ...editingPago, selectedMeses: next });
+                          }}
+                          className={`py-1.5 rounded-lg text-[9px] font-black uppercase transition-all border ${
+                            editingPago?.selectedMeses?.includes(m)
+                              ? 'bg-primary text-white border-primary shadow-sm'
+                              : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-200'
+                          }`}
+                        >
+                          {m.slice(0, 3)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Mes</label>
+                      <select 
+                        required 
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" 
+                        value={editingPago?.mes || ""} 
+                        onChange={e => setEditingPago({...editingPago, mes: e.target.value})}
                       >
-                        {m.slice(0, 3)}
-                      </button>
-                    ))}
+                        {meses.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Año</label>
+                      <input 
+                        type="number" 
+                        required 
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none text-sm" 
+                        value={editingPago?.anio || anioActual} 
+                        onChange={e => setEditingPago({...editingPago, anio: Number(e.target.value)})} 
+                      />
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Mes</label>
-                    <select 
-                      required 
-                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none" 
-                      value={editingPago?.mes || ""} 
-                      onChange={e => setEditingPago({...editingPago, mes: e.target.value})}
-                    >
-                      {meses.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Año</label>
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                      {isMultiMonth ? 'Monto Total' : 'Monto'}
+                    </label>
                     <input 
                       type="number" 
                       required 
-                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none" 
-                      value={editingPago?.anio || anioActual} 
-                      onChange={e => setEditingPago({...editingPago, anio: Number(e.target.value)})} 
+                      placeholder={isMultiMonth ? "25500" : "8500"} 
+                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:border-primary transition-all" 
+                      value={editingPago?.monto || ""} 
+                      onChange={e => setEditingPago({...editingPago, monto: Number(e.target.value)})} 
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método</label>
+                    <select 
+                      required 
+                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" 
+                      value={editingPago?.metodo || "EFECTIVO"} 
+                      onChange={e => setEditingPago({...editingPago, metodo: e.target.value as any})}
+                    >
+                      <option value="EFECTIVO">Efectivo</option>
+                      <option value="TRANSFERENCIA">Transferencia</option>
+                    </select>
+                  </div>
                 </div>
-              )}
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">
-                  {isMultiMonth ? 'Monto Total por todos los meses ($)' : 'Monto ($)'}
-                </label>
-                <input 
-                  type="number" 
-                  required 
-                  placeholder={isMultiMonth ? "25500" : "8500"} 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-lg outline-none focus:border-primary transition-all" 
-                  value={editingPago?.monto || ""} 
-                  onChange={e => setEditingPago({...editingPago, monto: Number(e.target.value)})} 
-                />
                 {isMultiMonth && editingPago?.selectedMeses && editingPago.selectedMeses.length > 0 && (
-                  <p className="text-[10px] font-bold text-slate-400 mt-1 italic">
-                    Se crearán {editingPago.selectedMeses.length} registros de ${(Number(editingPago.monto || 0) / editingPago.selectedMeses.length).toFixed(0)} cada uno.
+                  <p className="text-[9px] font-bold text-slate-400 italic -mt-2">
+                    Se crearán {editingPago.selectedMeses.length} registros de ${(Number(editingPago.monto || 0) / editingPago.selectedMeses.length).toFixed(0)} c/u.
                   </p>
                 )}
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método de Pago</label>
-                <select 
-                  required 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none" 
-                  value={editingPago?.metodo || "EFECTIVO"} 
-                  onChange={e => setEditingPago({...editingPago, metodo: e.target.value as any})}
-                >
-                  <option value="EFECTIVO">Efectivo</option>
-                  <option value="TRANSFERENCIA">Transferencia</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1 text-center block">Estado Inicial</label>
-                <div className="flex bg-slate-50 p-1 rounded-2xl border border-slate-100">
-                  <button 
-                    type="button"
-                    onClick={() => setEditingPago({...editingPago, estado: 'PAGADO'})}
-                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PAGADO' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400'}`}
-                  >
-                    Pagado
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setEditingPago({...editingPago, estado: 'PENDIENTE'})}
-                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PENDIENTE' ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-400'}`}
-                  >
-                    Pendiente
-                  </button>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1 text-center block">Estado Inicial</label>
+                  <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+                    <button 
+                      type="button"
+                      onClick={() => setEditingPago({...editingPago, estado: 'PAGADO'})}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PAGADO' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400'}`}
+                    >
+                      Pagado
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setEditingPago({...editingPago, estado: 'PENDIENTE'})}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PENDIENTE' ? 'bg-rose-500 text-white shadow-md' : 'text-slate-400'}`}
+                    >
+                      Pendiente
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <button 
-                type="submit" 
-                disabled={processing} 
-                className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-6 flex items-center justify-center space-x-2 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
-              >
-                {processing ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR REGISTRO</span>}
-              </button>
-            </form>
+                <button 
+                  type="submit" 
+                  disabled={processing} 
+                  className="w-full bg-primary text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 mt-2 flex items-center justify-center space-x-2 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {processing ? <Loader2 className="animate-spin" size={18} /> : <span>GUARDAR REGISTRO</span>}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
