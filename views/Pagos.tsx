@@ -16,6 +16,7 @@ const Pagos = () => {
   const [editingPago, setEditingPago] = useState<Partial<Pago> & { selectedMeses?: string[] } | null>(null);
   const [isMultiMonth, setIsMultiMonth] = useState(false);
   const [filterMetodo, setFilterMetodo] = useState<'TODOS' | 'EFECTIVO' | 'TRANSFERENCIA'>('TODOS');
+  const [viewMode, setViewMode] = useState<'AGRUPADO' | 'DETALLADO'>('AGRUPADO');
 
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const now = new Date();
@@ -67,38 +68,76 @@ const Pagos = () => {
     }
   };
 
-  const togglePago = async (id: string, current: string) => {
+  const togglePago = async (ids: string | string[], current: string) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
     const next = current === 'PAGADO' ? 'PENDIENTE' : 'PAGADO';
+    setProcessing(true);
     try {
-      await updateEstadoPago(id, next);
+      await Promise.all(idArray.map(id => updateEstadoPago(id, next)));
       fetchData();
     } catch (err) {
       console.error(err);
+    } finally {
+      setProcessing(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("¿Confirmas la eliminación de este registro de pago?")) {
+  const handleDelete = async (ids: string | string[]) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    if (window.confirm(`¿Confirmas la eliminación de ${idArray.length > 1 ? 'estos registros' : 'este registro'}?`)) {
+      setProcessing(true);
       try {
-        await deletePago(id);
+        await Promise.all(idArray.map(id => deletePago(id)));
         fetchData();
       } catch (err) {
         console.error(err);
+      } finally {
+        setProcessing(false);
       }
     }
   };
 
-  const filteredPagos = pagos.filter(p => {
-    const socio = socios.find(s => String(s.id).trim() === String(p.socioId).trim());
-    const term = searchTerm.toLowerCase();
-    
-    // Filtro por método
-    if (filterMetodo !== 'TODOS' && p.metodo !== filterMetodo) return false;
+  const getProcessedPagos = () => {
+    const filtered = pagos.filter(p => {
+      const socio = socios.find(s => String(s.id).trim() === String(p.socioId).trim());
+      const term = searchTerm.toLowerCase();
+      if (filterMetodo !== 'TODOS' && p.metodo !== filterMetodo) return false;
+      if (!term) return true;
+      if (!socio) return false;
+      return `${socio.nombre} ${socio.apellido}`.toLowerCase().includes(term);
+    });
 
-    if (!term) return true;
-    if (!socio) return false;
-    return `${socio.nombre} ${socio.apellido}`.toLowerCase().includes(term);
-  });
+    if (viewMode === 'DETALLADO') return filtered.map(p => ({ ...p, ids: [p.id], displayMes: p.mes }));
+
+    // Lógica de Agrupación
+    const groups: { [key: string]: any } = {};
+    filtered.forEach(p => {
+      // Agrupamos por Socio + Nota + Año + Método + Estado
+      const key = `${p.socioId}-${p.nota || 'cuota'}-${p.anio}-${p.metodo}-${p.estado}`;
+      if (!groups[key]) {
+        groups[key] = {
+          ...p,
+          ids: [p.id],
+          meses: [p.mes],
+          montoTotal: Number(p.monto)
+        };
+      } else {
+        groups[key].ids.push(p.id);
+        if (!groups[key].meses.includes(p.mes)) groups[key].meses.push(p.mes);
+        groups[key].montoTotal += Number(p.monto);
+      }
+    });
+
+    return Object.values(groups).map(g => ({
+      ...g,
+      monto: g.montoTotal,
+      displayMes: g.meses.length > 1 
+        ? `${g.meses[0].slice(0,3)} - ${g.meses[g.meses.length-1].slice(0,3)}` 
+        : g.meses[0]
+    }));
+  };
+
+  const processedPagos = getProcessedPagos();
 
   const totalCaja = pagos.filter(p => p.estado === 'PAGADO').reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
   const totalEfectivo = pagos.filter(p => p.estado === 'PAGADO' && String(p.metodo).trim().toUpperCase() === 'EFECTIVO').reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
@@ -180,6 +219,20 @@ const Pagos = () => {
               <X size={14} />
             </button>
           )}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+            <button 
+              onClick={() => setViewMode('AGRUPADO')}
+              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${viewMode === 'AGRUPADO' ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}
+            >
+              Agrupado
+            </button>
+            <button 
+              onClick={() => setViewMode('DETALLADO')}
+              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${viewMode === 'DETALLADO' ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}
+            >
+              Detalle
+            </button>
+          </div>
         </div>
         
         <div className="overflow-x-auto no-scrollbar">
@@ -197,13 +250,13 @@ const Pagos = () => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan={5} className="p-20 text-center"><Loader2 className="animate-spin inline text-primary mr-2" /> <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cargando registros...</span></td></tr>
-              ) : filteredPagos.length === 0 ? (
-                <tr><td colSpan={5} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest italic">No se encontraron registros de pago</td></tr>
-              ) : filteredPagos.map(p => {
+                <tr><td colSpan={7} className="p-20 text-center"><Loader2 className="animate-spin inline text-primary mr-2" /> <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cargando registros...</span></td></tr>
+              ) : processedPagos.length === 0 ? (
+                <tr><td colSpan={7} className="p-20 text-center text-slate-300 font-bold uppercase text-xs tracking-widest italic">No se encontraron registros de pago</td></tr>
+              ) : processedPagos.map((p: any) => {
                 const socio = socios.find(s => String(s.id) === String(p.socioId));
                 return (
-                  <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={p.ids.join('-')} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-5 font-bold text-slate-900">
                       {socio ? `${socio.nombre} ${socio.apellido}` : `ID: ${p.socioId}`}
                     </td>
@@ -214,11 +267,11 @@ const Pagos = () => {
                     </td>
                     <td className="px-8 py-5">
                       <div className="text-[10px] font-black text-slate-500 uppercase tracking-tighter bg-slate-100 inline-block px-2 py-1 rounded-lg">
-                        {p.mes} {p.anio}
+                        {p.displayMes} {p.anio}
                       </div>
                     </td>
                     <td className="px-8 py-5 font-black text-slate-900 text-lg tracking-tighter">
-                      ${Number(p.monto).toLocaleString()}
+                      ${Math.round(Number(p.monto)).toLocaleString()}
                     </td>
                     <td className="px-8 py-5">
                       <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${p.metodo === 'TRANSFERENCIA' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
@@ -227,7 +280,7 @@ const Pagos = () => {
                     </td>
                     <td className="px-8 py-5 text-center">
                       <button 
-                        onClick={() => togglePago(p.id, p.estado)} 
+                        onClick={() => togglePago(p.ids, p.estado)} 
                         className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase transition-all shadow-sm hover:scale-105 active:scale-95 border ${
                           p.estado === 'PAGADO' 
                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
@@ -239,8 +292,10 @@ const Pagos = () => {
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="flex justify-end space-x-1">
-                        <button onClick={() => { setEditingPago(p); setIsModalOpen(true); }} className="p-2.5 text-slate-300 hover:text-primary hover:bg-white rounded-xl border border-transparent hover:border-slate-100 transition-all shadow-sm"><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(p.id)} className="p-2.5 text-slate-300 hover:text-rose-600 hover:bg-white rounded-xl border border-transparent hover:border-slate-100 transition-all shadow-sm"><Trash2 size={16} /></button>
+                        {p.ids.length === 1 && (
+                          <button onClick={() => { setEditingPago(p); setIsModalOpen(true); }} className="p-2.5 text-slate-300 hover:text-primary hover:bg-white rounded-xl border border-transparent hover:border-slate-100 transition-all shadow-sm"><Edit2 size={16} /></button>
+                        )}
+                        <button onClick={() => handleDelete(p.ids)} className="p-2.5 text-slate-300 hover:text-rose-600 hover:bg-white rounded-xl border border-transparent hover:border-slate-100 transition-all shadow-sm"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
