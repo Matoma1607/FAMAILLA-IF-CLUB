@@ -309,7 +309,7 @@ const Pagos = () => {
                     </td>
                     <td className="px-8 py-5">
                       <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${p.metodo === 'TRANSFERENCIA' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
-                        {p.metodo || 'S/D'}
+                        {p.metodo || 'EFECTIVO'}
                       </span>
                     </td>
                     <td className="px-8 py-5 text-center">
