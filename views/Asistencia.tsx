@@ -494,11 +494,17 @@ const AsistenciaView = () => {
                     <input required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={newSocio.apellido || ''} onChange={e => setNewSocio({...newSocio, apellido: e.target.value.toUpperCase()})} />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
-                  <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" value={newSocio.categoria} onChange={e => setNewSocio({...newSocio, categoria: e.target.value as Category})}>
-                    {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
+                    <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" value={newSocio.categoria} onChange={e => setNewSocio({...newSocio, categoria: e.target.value as Category})}>
+                      {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">F. Nacimiento</label>
+                    <input type="date" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={newSocio.fechaNacimiento || ''} onChange={e => setNewSocio({...newSocio, fechaNacimiento: e.target.value})} />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tutor</label>
