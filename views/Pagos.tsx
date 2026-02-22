@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  CreditCard, Search, Plus, Loader2, X, Trash2, Edit2, DollarSign, Wallet, ArrowRightLeft
+  CreditCard, Search, Plus, Loader2, X, Trash2, Edit2, DollarSign, Wallet, ArrowRightLeft, Check, Clock
 } from 'lucide-react';
 import { getPagos, getSocios, registrarPago, updateEstadoPago, deletePago } from '../services/dataService';
 import { Pago, Socio } from '../types';
@@ -118,15 +118,20 @@ const Pagos = () => {
     const groups: { [key: string]: any } = {};
     filtered.forEach(p => {
       // Agrupamos por Socio + Año para consolidar meses y conceptos
-      const key = `${p.socioId}-${p.anio}`;
+      // Usamos trim() para evitar duplicados por espacios
+      const sId = String(p.socioId).trim();
+      const key = `${sId}-${p.anio}`;
+      
       if (!groups[key]) {
         groups[key] = {
           ...p,
+          socioId: sId,
           ids: [p.id],
-          montoTotal: Number(p.monto),
+          montoTotal: Number(p.monto) || 0,
           notas: p.nota ? [p.nota] : [],
           mesesList: [p.mes],
-          estados: [p.estado]
+          estados: [p.estado],
+          rawRecords: [p]
         };
       } else {
         groups[key].ids.push(p.id);
@@ -136,7 +141,9 @@ const Pagos = () => {
         }
         if (!groups[key].mesesList.includes(p.mes)) groups[key].mesesList.push(p.mes);
         if (!groups[key].estados.includes(p.estado)) groups[key].estados.push(p.estado);
-        groups[key].montoTotal += Number(p.monto);
+        groups[key].montoTotal += (Number(p.monto) || 0);
+        groups[key].rawRecords.push(p);
+        
         // Si alguno es transferencia, marcamos el grupo como tal para visibilidad
         if (p.metodo === 'TRANSFERENCIA') groups[key].metodo = 'TRANSFERENCIA';
       }
@@ -146,8 +153,14 @@ const Pagos = () => {
       // Ordenar meses cronológicamente
       const sortedMeses = [...g.mesesList].sort((a, b) => meses.indexOf(a) - meses.indexOf(b));
       
-      // Estado inteligente: si debe algo (PENDIENTE), el grupo se marca como PENDIENTE
-      const finalEstado = g.estados.includes('PENDIENTE') ? 'PENDIENTE' : 'PAGADO';
+      // Estado inteligente: 
+      // Si para un mismo mes hay un registro PAGADO y uno PENDIENTE, ignoramos el PENDIENTE
+      const mesesConPago = new Set(g.rawRecords.filter((r: any) => r.estado === 'PAGADO').map((r: any) => r.mes));
+      const estadosReales = g.rawRecords
+        .filter((r: any) => r.estado === 'PAGADO' || !mesesConPago.has(r.mes))
+        .map((r: any) => r.estado);
+
+      const finalEstado = estadosReales.includes('PENDIENTE') ? 'PENDIENTE' : 'PAGADO';
 
       // Formatear meses: si son varios, mostrar rango o lista
       let displayMes = sortedMeses[0];
@@ -487,21 +500,23 @@ const Pagos = () => {
                 )}
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1 text-center block">Estado Inicial</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1 text-center block">Estado del Pago</label>
                   <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
                     <button 
                       type="button"
                       onClick={() => setEditingPago({...editingPago, estado: 'PAGADO'})}
-                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PAGADO' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400'}`}
+                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all flex items-center justify-center space-x-2 ${editingPago?.estado === 'PAGADO' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                      Pagado
+                      <Check size={14} />
+                      <span>Pagado</span>
                     </button>
                     <button 
                       type="button"
                       onClick={() => setEditingPago({...editingPago, estado: 'PENDIENTE'})}
-                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${editingPago?.estado === 'PENDIENTE' ? 'bg-rose-500 text-white shadow-md' : 'text-slate-400'}`}
+                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all flex items-center justify-center space-x-2 ${editingPago?.estado === 'PENDIENTE' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                      Pendiente
+                      <Clock size={14} />
+                      <span>Pendiente</span>
                     </button>
                   </div>
                 </div>
