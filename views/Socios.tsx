@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, Check, Clock, Calendar
 } from 'lucide-react';
-import { getSocios, saveSocio, deleteSocio, getPagos, registrarPago } from '../services/dataService';
+import { getSocios, saveSocio, deleteSocio, getPagos, registrarPago, deletePago } from '../services/dataService';
 import { Socio, Category, Pago } from '../types';
 
 const Socios = () => {
@@ -99,12 +99,25 @@ const Socios = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("¿Confirmas la eliminación definitiva?")) {
+    if (window.confirm("¿Confirmas la eliminación definitiva del alumno y todos sus registros de pago?")) {
+      setLoading(true);
       try {
+        // 1. Buscar todos los pagos del socio
+        const pagosSocio = pagos.filter(p => String(p.socioId).trim() === String(id).trim());
+        
+        // 2. Borrar cada pago en el servidor
+        if (pagosSocio.length > 0) {
+          await Promise.all(pagosSocio.map(p => deletePago(p.id)));
+        }
+
+        // 3. Borrar el socio
         await deleteSocio(id);
+        
         fetchData();
       } catch (err: any) {
-        setError(err.message);
+        setError(`Error al eliminar: ${err.message}`);
+      } finally {
+        setLoading(false);
       }
     }
   };
