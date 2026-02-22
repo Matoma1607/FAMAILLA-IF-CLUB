@@ -64,9 +64,10 @@ const Socios = () => {
         if (initialPayments.mensual) conceptos.push('Mensual');
         if (initialPayments.seguro) conceptos.push('Seguro');
 
-        if (conceptos.length > 0) {
+        if (conceptos.length > 0 && editingSocio) {
           await registrarPago({
             socioId,
+            nombreSocio: `${editingSocio.nombre} ${editingSocio.apellido}`,
             mes: mesActual,
             anio: anioActual,
             monto: 0,
@@ -262,27 +263,30 @@ const Socios = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl my-auto animate-fade-in">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-3xl shadow-2xl my-auto animate-fade-in relative">
             <div className="p-8 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem]">
-              <h3 className="text-xl font-bold">{editingSocio?.id ? 'Editar Jugador' : 'Nuevo Ingreso'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={24} /></button>
+              <div>
+                <h3 className="text-2xl font-bold text-secondary">{editingSocio?.id ? 'Editar Jugador' : 'Nuevo Ingreso'}</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Famaillá IF • Gestión de Plantel</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={28} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="p-8 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
-                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingSocio?.nombre || ''} onChange={e => setEditingSocio({...editingSocio, nombre: e.target.value})} />
+                  <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" value={editingSocio?.nombre || ''} onChange={e => setEditingSocio({...editingSocio, nombre: e.target.value.toUpperCase()})} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Apellido</label>
-                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingSocio?.apellido || ''} onChange={e => setEditingSocio({...editingSocio, apellido: e.target.value})} />
+                  <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" value={editingSocio?.apellido || ''} onChange={e => setEditingSocio({...editingSocio, apellido: e.target.value.toUpperCase()})} />
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
-                  <select className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold" value={editingSocio?.categoria || ''} onChange={e => setEditingSocio({...editingSocio, categoria: e.target.value as Category})}>
+                  <select className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none" value={editingSocio?.categoria || ''} onChange={e => setEditingSocio({...editingSocio, categoria: e.target.value as Category})}>
                     {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
@@ -290,33 +294,33 @@ const Socios = () => {
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Nacimiento</label>
                   <input 
                     type="date" 
-                    className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" 
                     value={editingSocio?.fechaNacimiento || ''} 
                     onChange={e => setEditingSocio({...editingSocio, fechaNacimiento: e.target.value})} 
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Ingreso</label>
                   <input 
                     type="date" 
                     required 
-                    className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" 
                     value={editingSocio?.fechaInscripcion || fechaHoy} 
                     onChange={e => setEditingSocio({...editingSocio, fechaInscripcion: e.target.value})} 
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tutor</label>
-                  <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingSocio?.nombreTutor || ''} onChange={e => setEditingSocio({...editingSocio, nombreTutor: e.target.value})} />
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre del Tutor</label>
+                  <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" value={editingSocio?.nombreTutor || ''} onChange={e => setEditingSocio({...editingSocio, nombreTutor: e.target.value.toUpperCase()})} />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">WhatsApp</label>
-                <input required className="w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Teléfono / WhatsApp</label>
+                <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" placeholder="381..." value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
               </div>
 
               {!editingSocio?.id && (
@@ -342,8 +346,8 @@ const Socios = () => {
                   </div>
                 </div>
               )}
-              <button type="submit" disabled={saving} className="w-full bg-primary text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-4 flex items-center justify-center space-x-2">
-                {saving ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR ALUMNO</span>}
+              <button type="submit" disabled={saving} className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-4 flex items-center justify-center space-x-2 active:scale-[0.98] transition-all">
+                {saving ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR JUGADOR</span>}
               </button>
             </form>
           </div>
