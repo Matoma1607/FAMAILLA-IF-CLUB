@@ -122,13 +122,18 @@ const Socios = () => {
   };
 
   const getPaymentStatus = (socioId: string) => {
-    const pago = pagos.find(p => 
+    const pagosSocioMes = pagos.filter(p => 
       String(p.socioId).trim() === String(socioId).trim() && 
       String(p.mes).trim() === String(mesActual).trim() && 
-      String(p.anio).trim() === String(anioActual).trim() &&
-      p.estado === 'PAGADO'
+      String(p.anio).trim() === String(anioActual).trim()
     );
-    return !!pago;
+
+    // Si no tiene registros para el mes actual, está vencido
+    if (pagosSocioMes.length === 0) return false;
+
+    // Si tiene algún pago PENDIENTE para el mes actual, está vencido
+    const tienePendientes = pagosSocioMes.some(p => p.estado === 'PENDIENTE');
+    return !tienePendientes;
   };
 
   const filteredSocios = socios.filter(s => 
