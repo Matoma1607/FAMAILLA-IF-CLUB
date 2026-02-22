@@ -262,94 +262,97 @@ const Socios = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-3xl shadow-2xl my-auto animate-fade-in relative">
-            <div className="p-8 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
               <div>
-                <h3 className="text-2xl font-bold text-secondary">{editingSocio?.id ? 'Editar Jugador' : 'Nuevo Ingreso'}</h3>
+                <h3 className="text-xl font-bold text-secondary">{editingSocio?.id ? 'Editar Jugador' : 'Nuevo Ingreso'}</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Famaillá IF • Gestión de Plantel</p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={28} /></button>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
-                  <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" value={editingSocio?.nombre || ''} onChange={e => setEditingSocio({...editingSocio, nombre: e.target.value.toUpperCase()})} />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Apellido</label>
-                  <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" value={editingSocio?.apellido || ''} onChange={e => setEditingSocio({...editingSocio, apellido: e.target.value.toUpperCase()})} />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
-                  <select className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none" value={editingSocio?.categoria || ''} onChange={e => setEditingSocio({...editingSocio, categoria: e.target.value as Category})}>
-                    {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Nacimiento</label>
-                  <input 
-                    type="date" 
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" 
-                    value={editingSocio?.fechaNacimiento || ''} 
-                    onChange={e => setEditingSocio({...editingSocio, fechaNacimiento: e.target.value})} 
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Ingreso</label>
-                  <input 
-                    type="date" 
-                    required 
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" 
-                    value={editingSocio?.fechaInscripcion || fechaHoy} 
-                    onChange={e => setEditingSocio({...editingSocio, fechaInscripcion: e.target.value})} 
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre del Tutor</label>
-                  <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" value={editingSocio?.nombreTutor || ''} onChange={e => setEditingSocio({...editingSocio, nombreTutor: e.target.value.toUpperCase()})} />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Teléfono / WhatsApp</label>
-                <input required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-primary transition-all" placeholder="381..." value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
-              </div>
-
-              {!editingSocio?.id && (
-                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-secondary">Conceptos a Cobrar</h4>
-                    <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-lg uppercase">Se cargará como Pendiente</span>
+            
+            <div className="overflow-y-auto p-6 custom-scrollbar">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
+                    <input required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingSocio?.nombre || ''} onChange={e => setEditingSocio({...editingSocio, nombre: e.target.value.toUpperCase()})} />
                   </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
-                      <input type="checkbox" className="hidden" checked={initialPayments.inscripcion} onChange={e => setInitialPayments({...initialPayments, inscripcion: e.target.checked})} />
-                      <span className="text-[10px] font-black uppercase">Inscripción</span>
-                    </label>
-                    <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.mensual ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
-                      <input type="checkbox" className="hidden" checked={initialPayments.mensual} onChange={e => setInitialPayments({...initialPayments, mensual: e.target.checked})} />
-                      <span className="text-[10px] font-black uppercase">Mensual</span>
-                    </label>
-                    <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.seguro ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
-                      <input type="checkbox" className="hidden" checked={initialPayments.seguro} onChange={e => setInitialPayments({...initialPayments, seguro: e.target.checked})} />
-                      <span className="text-[10px] font-black uppercase">Seguro</span>
-                    </label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Apellido</label>
+                    <input required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingSocio?.apellido || ''} onChange={e => setEditingSocio({...editingSocio, apellido: e.target.value.toUpperCase()})} />
                   </div>
                 </div>
-              )}
-              <button type="submit" disabled={saving} className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-4 flex items-center justify-center space-x-2 active:scale-[0.98] transition-all">
-                {saving ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR JUGADOR</span>}
-              </button>
-            </form>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
+                    <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" value={editingSocio?.categoria || ''} onChange={e => setEditingSocio({...editingSocio, categoria: e.target.value as Category})}>
+                      {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Nacimiento</label>
+                    <input 
+                      type="date" 
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" 
+                      value={editingSocio?.fechaNacimiento || ''} 
+                      onChange={e => setEditingSocio({...editingSocio, fechaNacimiento: e.target.value})} 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Ingreso</label>
+                    <input 
+                      type="date" 
+                      required 
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" 
+                      value={editingSocio?.fechaInscripcion || fechaHoy} 
+                      onChange={e => setEditingSocio({...editingSocio, fechaInscripcion: e.target.value})} 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre del Tutor</label>
+                    <input required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingSocio?.nombreTutor || ''} onChange={e => setEditingSocio({...editingSocio, nombreTutor: e.target.value.toUpperCase()})} />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Teléfono / WhatsApp</label>
+                  <input required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" placeholder="381..." value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
+                </div>
+
+                {!editingSocio?.id && (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[9px] font-black uppercase tracking-widest text-secondary">Conceptos a Cobrar</h4>
+                      <span className="text-[8px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md uppercase">Se cargará como Pendiente</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <input type="checkbox" className="hidden" checked={initialPayments.inscripcion} onChange={e => setInitialPayments({...initialPayments, inscripcion: e.target.checked})} />
+                        <span className="text-[8px] font-black uppercase">Inscripción</span>
+                      </label>
+                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.mensual ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <input type="checkbox" className="hidden" checked={initialPayments.mensual} onChange={e => setInitialPayments({...initialPayments, mensual: e.target.checked})} />
+                        <span className="text-[8px] font-black uppercase">Mensual</span>
+                      </label>
+                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.seguro ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <input type="checkbox" className="hidden" checked={initialPayments.seguro} onChange={e => setInitialPayments({...initialPayments, seguro: e.target.checked})} />
+                        <span className="text-[8px] font-black uppercase">Seguro</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+                <button type="submit" disabled={saving} className="w-full bg-primary text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 mt-2 flex items-center justify-center space-x-2 active:scale-[0.98] transition-all">
+                  {saving ? <Loader2 className="animate-spin" size={18} /> : <span>GUARDAR JUGADOR</span>}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
