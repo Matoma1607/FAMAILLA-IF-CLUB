@@ -142,14 +142,20 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
       </div>
 
       {isModalOpen && isOwner && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]">
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          onClick={() => { setIsModalOpen(false); setEditingFecha(null); }}
+        >
+          <div 
+            className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-secondary">{editingFecha?.id ? 'Editar Fecha' : 'Nueva Fecha de Liga'}</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Competición Oficial</p>
               </div>
-              <button onClick={() => { setIsModalOpen(false); setEditingFecha(null); }} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
+              <button onClick={() => { setIsModalOpen(false); setEditingFecha(null); }} className="text-slate-400 hover:text-slate-600 p-2 transition-colors cursor-pointer"><X size={24} /></button>
             </div>
             
             <div className="overflow-y-auto p-6 custom-scrollbar">
