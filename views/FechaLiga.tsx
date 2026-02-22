@@ -52,6 +52,18 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
     }
   };
 
+  const formatTime = (timeStr: string) => {
+    if (!timeStr) return "S/H";
+    // Si viene en formato ISO de Google Sheets (1899-...)
+    if (timeStr.includes('T') && timeStr.includes('1899')) {
+      const date = new Date(timeStr);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    return timeStr;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
@@ -111,7 +123,7 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                   </div>
                   <div className="flex items-center space-x-2 text-slate-500">
                     <Clock size={16} className="text-primary" />
-                    <span className="font-bold">{f.hora} HS</span>
+                    <span className="font-bold">{formatTime(f.hora)} HS</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-slate-500">
