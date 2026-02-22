@@ -112,32 +112,58 @@ const Pagos = () => {
     // Lógica de Agrupación Inteligente
     const groups: { [key: string]: any } = {};
     filtered.forEach(p => {
-      // Agrupamos estrictamente por Socio + Mes + Año
-      const key = `${p.socioId}-${p.mes}-${p.anio}`;
+      // Agrupamos por Socio + Año para consolidar meses y conceptos
+      const key = `${p.socioId}-${p.anio}`;
       if (!groups[key]) {
         groups[key] = {
           ...p,
           ids: [p.id],
           montoTotal: Number(p.monto),
-          notas: p.nota ? [p.nota] : []
+          notas: p.nota ? [p.nota] : [],
+          mesesList: [p.mes],
+          estados: [p.estado]
         };
       } else {
         groups[key].ids.push(p.id);
-        if (p.nota && !groups[key].notas.includes(p.nota)) groups[key].notas.push(p.nota);
+        const normalizedNota = p.nota ? p.nota.trim().toUpperCase() : '';
+        if (normalizedNota && !groups[key].notas.some((n: string) => n.trim().toUpperCase() === normalizedNota)) {
+          groups[key].notas.push(p.nota);
+        }
+        if (!groups[key].mesesList.includes(p.mes)) groups[key].mesesList.push(p.mes);
+        if (!groups[key].estados.includes(p.estado)) groups[key].estados.push(p.estado);
         groups[key].montoTotal += Number(p.monto);
-        // Si alguno de los registros está PAGADO, el grupo se muestra como PAGADO
-        if (p.estado === 'PAGADO') groups[key].estado = 'PAGADO';
-        // Si el método es transferencia en alguno, lo marcamos así
+        // Si alguno es transferencia, marcamos el grupo como tal para visibilidad
         if (p.metodo === 'TRANSFERENCIA') groups[key].metodo = 'TRANSFERENCIA';
       }
     });
 
-    return Object.values(groups).map(g => ({
-      ...g,
-      monto: g.montoTotal,
-      nota: g.notas.length > 0 ? g.notas.join(' + ') : 'Cuota Mensual',
-      displayMes: g.mes 
-    }));
+    return Object.values(groups).map(g => {
+      // Ordenar meses cronológicamente
+      const sortedMeses = [...g.mesesList].sort((a, b) => meses.indexOf(a) - meses.indexOf(b));
+      
+      // Estado inteligente: si debe algo (PENDIENTE), el grupo se marca como PENDIENTE
+      const finalEstado = g.estados.includes('PENDIENTE') ? 'PENDIENTE' : 'PAGADO';
+
+      // Formatear meses: si son varios, mostrar rango o lista
+      let displayMes = sortedMeses[0];
+      if (sortedMeses.length > 1) {
+        const isConsecutive = sortedMeses.every((m, i) => {
+          if (i === 0) return true;
+          return meses.indexOf(m) === meses.indexOf(sortedMeses[i-1]) + 1;
+        });
+        displayMes = isConsecutive 
+          ? `${sortedMeses[0].slice(0,3)} - ${sortedMeses[sortedMeses.length-1].slice(0,3)}`
+          : sortedMeses.map(m => m.slice(0,3)).join(', ');
+      }
+
+      return {
+        ...g,
+        monto: g.montoTotal,
+        estado: finalEstado,
+        nota: g.notas.length > 0 ? g.notas.join(' + ') : 'Cuota Mensual',
+        displayMes
+      };
+    });
   };
 
   const processedPagos = getProcessedPagos();
