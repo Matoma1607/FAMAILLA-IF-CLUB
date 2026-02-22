@@ -142,57 +142,60 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
       </div>
 
       {isModalOpen && isOwner && (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl my-auto animate-fade-in">
-            <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-secondary">{editingFecha?.id ? 'Editar Fecha' : 'Nueva Fecha de Liga'}</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Competición Oficial</p>
               </div>
-              <button onClick={() => { setIsModalOpen(false); setEditingFecha(null); }} className="text-slate-400 hover:text-slate-600 p-2"><X size={24} /></button>
+              <button onClick={() => { setIsModalOpen(false); setEditingFecha(null); }} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Rival</label>
-                <input required placeholder="Nombre del Club Rival" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingFecha?.rival || ""} onChange={e => setEditingFecha({...editingFecha, rival: e.target.value})} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            
+            <div className="overflow-y-auto p-6 custom-scrollbar">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Condición</label>
-                  <select className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingFecha?.condicion} onChange={e => setEditingFecha({...editingFecha, condicion: e.target.value as any})}>
-                    <option value="LOCAL">Local</option>
-                    <option value="VISITANTE">Visitante</option>
-                  </select>
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Rival</label>
+                  <input required placeholder="Nombre del Club Rival" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingFecha?.rival || ""} onChange={e => setEditingFecha({...editingFecha, rival: e.target.value.toUpperCase()})} />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
-                  <select className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none" value={editingFecha?.categoria} onChange={e => setEditingFecha({...editingFecha, categoria: e.target.value})}>
-                    {Object.values(Category).map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha</label>
-                  <input required placeholder="Domingo 22/05" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingFecha?.fecha || ""} onChange={e => setEditingFecha({...editingFecha, fecha: e.target.value})} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Condición</label>
+                    <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" value={editingFecha?.condicion} onChange={e => setEditingFecha({...editingFecha, condicion: e.target.value as any})}>
+                      <option value="LOCAL">Local</option>
+                      <option value="VISITANTE">Visitante</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
+                    <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" value={editingFecha?.categoria} onChange={e => setEditingFecha({...editingFecha, categoria: e.target.value})}>
+                      {Object.values(Category).map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Hora</label>
-                  <input required placeholder="10:00" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingFecha?.hora || ""} onChange={e => setEditingFecha({...editingFecha, hora: e.target.value})} />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha</label>
+                    <input required placeholder="Domingo 22/05" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingFecha?.fecha || ""} onChange={e => setEditingFecha({...editingFecha, fecha: e.target.value})} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Hora</label>
+                    <input required placeholder="10:00" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingFecha?.hora || ""} onChange={e => setEditingFecha({...editingFecha, hora: e.target.value})} />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Lugar / Estadio</label>
-                <input required placeholder="Cancha de Famaillá IF" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingFecha?.lugar || ""} onChange={e => setEditingFecha({...editingFecha, lugar: e.target.value})} />
-              </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Lugar / Estadio</label>
+                  <input required placeholder="Cancha de Famaillá IF" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingFecha?.lugar || ""} onChange={e => setEditingFecha({...editingFecha, lugar: e.target.value.toUpperCase()})} />
+                </div>
 
-              <button type="submit" disabled={processing} className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-4 flex items-center justify-center space-x-2 active:scale-95 transition-all">
-                {processing ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR FECHA</span>}
-              </button>
-            </form>
+                <button type="submit" disabled={processing} className="w-full bg-primary text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 mt-2 flex items-center justify-center space-x-2 active:scale-[0.98] transition-all">
+                  {processing ? <Loader2 className="animate-spin" size={18} /> : <span>GUARDAR FECHA</span>}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}

@@ -97,50 +97,56 @@ const Entrenamientos = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl my-auto animate-fade-in">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold">{editingEnt?.id ? 'Editar Evento' : 'Programar Fecha'}</h3>
-              <button onClick={() => { setIsModalOpen(false); setEditingEnt(null); }} className="text-slate-400 hover:text-slate-600 p-2"><X size={24} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
+              <div>
+                <h3 className="text-xl font-bold text-secondary">{editingEnt?.id ? 'Editar Evento' : 'Programar Fecha'}</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Agenda Famaillá IF</p>
+              </div>
+              <button onClick={() => { setIsModalOpen(false); setEditingEnt(null); }} className="text-slate-300 hover:text-slate-600 p-2 transition-colors"><X size={24} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tipo</label>
-                  <select className="w-full p-4 bg-slate-50 border rounded-2xl font-bold" value={editingEnt?.tipo} onChange={e => setEditingEnt({...editingEnt, tipo: e.target.value as EventType})}>
-                    <option value="Entrenamiento">Entrenamiento</option>
-                    <option value="Partido">Partido</option>
-                  </select>
+            
+            <div className="overflow-y-auto p-6 custom-scrollbar">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tipo</label>
+                    <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" value={editingEnt?.tipo} onChange={e => setEditingEnt({...editingEnt, tipo: e.target.value as EventType})}>
+                      <option value="Entrenamiento">Entrenamiento</option>
+                      <option value="Partido">Partido</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
+                    <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" value={editingEnt?.categoria} onChange={e => setEditingEnt({...editingEnt, categoria: e.target.value as Category})}>
+                      {Object.values(Category).map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoría</label>
-                  <select className="w-full p-4 bg-slate-50 border rounded-2xl font-bold" value={editingEnt?.categoria} onChange={e => setEditingEnt({...editingEnt, categoria: e.target.value as Category})}>
-                    {Object.values(Category).map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Día y Fecha</label>
+                  <input required placeholder="Sábado 15" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingEnt?.dia || ""} onChange={e => setEditingEnt({...editingEnt, dia: e.target.value.toUpperCase()})} />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Día y Fecha</label>
-                <input required placeholder="Sábado 15" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingEnt?.dia || ""} onChange={e => setEditingEnt({...editingEnt, dia: e.target.value})} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Hora</label>
-                  <input required placeholder="18:30" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingEnt?.hora || ""} onChange={e => setEditingEnt({...editingEnt, hora: e.target.value})} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Hora</label>
+                    <input required placeholder="18:30" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingEnt?.hora || ""} onChange={e => setEditingEnt({...editingEnt, hora: e.target.value})} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Profesor</label>
+                    <input required placeholder="Profe Gómez" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingEnt?.profesor || ""} onChange={e => setEditingEnt({...editingEnt, profesor: e.target.value.toUpperCase()})} />
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Profesor</label>
-                  <input required placeholder="Profe Gómez" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingEnt?.profesor || ""} onChange={e => setEditingEnt({...editingEnt, profesor: e.target.value})} />
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Lugar / Cancha</label>
+                  <input required placeholder="Cancha Principal" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={editingEnt?.lugar || ""} onChange={e => setEditingEnt({...editingEnt, lugar: e.target.value.toUpperCase()})} />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Lugar / Cancha</label>
-                <input required placeholder="Cancha Principal" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-primary" value={editingEnt?.lugar || ""} onChange={e => setEditingEnt({...editingEnt, lugar: e.target.value})} />
-              </div>
-              <button type="submit" disabled={processing} className="w-full bg-primary text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 mt-4 flex items-center justify-center space-x-2">
-                {processing ? <Loader2 className="animate-spin" size={20} /> : <span>GUARDAR EN AGENDA</span>}
-              </button>
-            </form>
+                <button type="submit" disabled={processing} className="w-full bg-primary text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 mt-2 flex items-center justify-center space-x-2 active:scale-[0.98] transition-all">
+                  {processing ? <Loader2 className="animate-spin" size={18} /> : <span>GUARDAR EN AGENDA</span>}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
