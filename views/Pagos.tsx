@@ -109,31 +109,34 @@ const Pagos = () => {
 
     if (viewMode === 'DETALLADO') return filtered.map(p => ({ ...p, ids: [p.id], displayMes: p.mes }));
 
-    // Lógica de Agrupación
+    // Lógica de Agrupación Inteligente
     const groups: { [key: string]: any } = {};
     filtered.forEach(p => {
-      // Agrupamos por Socio + Nota + Año + Método + Estado
-      const key = `${p.socioId}-${p.nota || 'cuota'}-${p.anio}-${p.metodo}-${p.estado}`;
+      // Agrupamos estrictamente por Socio + Mes + Año
+      const key = `${p.socioId}-${p.mes}-${p.anio}`;
       if (!groups[key]) {
         groups[key] = {
           ...p,
           ids: [p.id],
-          meses: [p.mes],
-          montoTotal: Number(p.monto)
+          montoTotal: Number(p.monto),
+          notas: p.nota ? [p.nota] : []
         };
       } else {
         groups[key].ids.push(p.id);
-        if (!groups[key].meses.includes(p.mes)) groups[key].meses.push(p.mes);
+        if (p.nota && !groups[key].notas.includes(p.nota)) groups[key].notas.push(p.nota);
         groups[key].montoTotal += Number(p.monto);
+        // Si alguno de los registros está PAGADO, el grupo se muestra como PAGADO
+        if (p.estado === 'PAGADO') groups[key].estado = 'PAGADO';
+        // Si el método es transferencia en alguno, lo marcamos así
+        if (p.metodo === 'TRANSFERENCIA') groups[key].metodo = 'TRANSFERENCIA';
       }
     });
 
     return Object.values(groups).map(g => ({
       ...g,
       monto: g.montoTotal,
-      displayMes: g.meses.length > 1 
-        ? `${g.meses[0].slice(0,3)} - ${g.meses[g.meses.length-1].slice(0,3)}` 
-        : g.meses[0]
+      nota: g.notas.length > 0 ? g.notas.join(' + ') : 'Cuota Mensual',
+      displayMes: g.mes 
     }));
   };
 
