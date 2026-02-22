@@ -17,22 +17,10 @@ const Socios = () => {
   const [initialPayments, setInitialPayments] = useState({
     inscripcion: false,
     mensual: false,
-    seguro: false,
-    metodo: 'EFECTIVO' as 'EFECTIVO' | 'TRANSFERENCIA',
-    monto: 0,
-    estado: 'PAGADO' as 'PAGADO' | 'PENDIENTE'
+    seguro: false
   });
 
   const PRECIOS = { inscripcion: 5000, mensual: 8500, seguro: 3000 };
-
-  useEffect(() => {
-    if (!editingSocio?.id) {
-      const total = (initialPayments.inscripcion ? PRECIOS.inscripcion : 0) + 
-                    (initialPayments.mensual ? PRECIOS.mensual : 0) + 
-                    (initialPayments.seguro ? PRECIOS.seguro : 0);
-      setInitialPayments(prev => ({ ...prev, monto: total }));
-    }
-  }, [initialPayments.inscripcion, initialPayments.mensual, initialPayments.seguro]);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -68,20 +56,24 @@ const Socios = () => {
       const socioId = savedSocio?.id; 
 
       if (isNew && socioId) {
-        // Registrar UN SOLO pago combinado si hay opciones seleccionadas
+        // Registrar deuda PENDIENTE si hay opciones seleccionadas
         const conceptos = [];
         if (initialPayments.inscripcion) conceptos.push('Inscripción');
         if (initialPayments.mensual) conceptos.push('Mensual');
         if (initialPayments.seguro) conceptos.push('Seguro');
 
-        if (conceptos.length > 0 && initialPayments.monto > 0) {
+        if (conceptos.length > 0) {
+          const total = (initialPayments.inscripcion ? PRECIOS.inscripcion : 0) + 
+                        (initialPayments.mensual ? PRECIOS.mensual : 0) + 
+                        (initialPayments.seguro ? PRECIOS.seguro : 0);
+          
           await registrarPago({
             socioId,
             mes: mesActual,
             anio: anioActual,
-            monto: initialPayments.monto,
-            estado: initialPayments.estado,
-            metodo: initialPayments.metodo,
+            monto: total,
+            estado: 'PENDIENTE',
+            metodo: 'EFECTIVO',
             nota: conceptos.join(' + ')
           });
         }
@@ -89,7 +81,7 @@ const Socios = () => {
 
       setIsModalOpen(false);
       setEditingSocio(null);
-      setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO', monto: 0, estado: 'PAGADO' });
+      setInitialPayments({ inscripcion: false, mensual: false, seguro: false });
       setTimeout(() => fetchData(), 500);
     } catch (err: any) {
       setError(`Error al guardar: ${err.message}`);
@@ -172,7 +164,7 @@ const Socios = () => {
           <button 
             onClick={() => { 
               setEditingSocio({ categoria: Category.CHUPETONES, activo: true, fechaInscripcion: fechaHoy }); 
-              setInitialPayments({ inscripcion: false, mensual: false, seguro: false, metodo: 'EFECTIVO', monto: 0, estado: 'PAGADO' });
+              setInitialPayments({ inscripcion: false, mensual: false, seguro: false });
               setIsModalOpen(true); 
             }}
             className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
@@ -324,11 +316,10 @@ const Socios = () => {
               {!editingSocio?.id && (
                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-secondary">Cobro Inicial</h4>
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">SOLO NUEVOS</span>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-secondary">Conceptos a Cobrar</h4>
+                    <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-lg uppercase">Se cargará como Pendiente</span>
                   </div>
 
-                  {/* 1. Opciones de pago */}
                   <div className="grid grid-cols-3 gap-2">
                     <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
                       <input type="checkbox" className="hidden" checked={initialPayments.inscripcion} onChange={e => setInitialPayments({...initialPayments, inscripcion: e.target.checked})} />
@@ -342,62 +333,6 @@ const Socios = () => {
                       <input type="checkbox" className="hidden" checked={initialPayments.seguro} onChange={e => setInitialPayments({...initialPayments, seguro: e.target.checked})} />
                       <span className="text-[10px] font-black uppercase">Seguro</span>
                     </label>
-                  </div>
-                  
-                  {/* 2. Monto Total */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Monto Total a Cobrar ($)</label>
-                    <div className="relative">
-                      <input 
-                        type="number" 
-                        placeholder="0"
-                        className="w-full px-5 py-3 bg-white border border-slate-100 rounded-2xl font-black text-lg outline-none focus:border-primary text-secondary" 
-                        value={initialPayments.monto === 0 ? '' : initialPayments.monto} 
-                        onChange={e => setInitialPayments({...initialPayments, monto: e.target.value === '' ? 0 : Number(e.target.value)})} 
-                      />
-                    </div>
-                  </div>
-
-                  {/* 3. Método de pago */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método</label>
-                      <div className="flex bg-white p-1 rounded-2xl border border-slate-100">
-                        <button 
-                          type="button"
-                          onClick={() => setInitialPayments({...initialPayments, metodo: 'EFECTIVO'})}
-                          className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${initialPayments.metodo === 'EFECTIVO' ? 'bg-secondary text-white shadow-lg' : 'text-slate-400'}`}
-                        >
-                          Contado
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => setInitialPayments({...initialPayments, metodo: 'TRANSFERENCIA'})}
-                          className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${initialPayments.metodo === 'TRANSFERENCIA' ? 'bg-secondary text-white shadow-lg' : 'text-slate-400'}`}
-                        >
-                          Transf.
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Estado</label>
-                      <div className="flex bg-white p-1 rounded-2xl border border-slate-100">
-                        <button 
-                          type="button"
-                          onClick={() => setInitialPayments({...initialPayments, estado: 'PAGADO'})}
-                          className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${initialPayments.estado === 'PAGADO' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400'}`}
-                        >
-                          Pagado
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => setInitialPayments({...initialPayments, estado: 'PENDIENTE'})}
-                          className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${initialPayments.estado === 'PENDIENTE' ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-400'}`}
-                        >
-                          Pend.
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
