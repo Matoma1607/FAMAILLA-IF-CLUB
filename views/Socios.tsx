@@ -65,15 +65,11 @@ const Socios = () => {
         if (initialPayments.seguro) conceptos.push('Seguro');
 
         if (conceptos.length > 0) {
-          const total = (initialPayments.inscripcion ? PRECIOS.inscripcion : 0) + 
-                        (initialPayments.mensual ? PRECIOS.mensual : 0) + 
-                        (initialPayments.seguro ? PRECIOS.seguro : 0);
-          
           await registrarPago({
             socioId,
             mes: mesActual,
             anio: anioActual,
-            monto: total,
+            monto: 0,
             estado: 'PENDIENTE',
             metodo: 'EFECTIVO',
             nota: conceptos.join(' + ')
