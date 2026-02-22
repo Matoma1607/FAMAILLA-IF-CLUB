@@ -67,6 +67,7 @@ const AsistenciaView = () => {
     setSaving(true);
     const batch = filteredSocios.map(s => ({
       socioId: s.id,
+      nombreSocio: `${s.nombre} ${s.apellido}`,
       fecha: selectedDate,
       categoria: selectedCat,
       presente: asistenciaLocal[s.id] || false
@@ -435,7 +436,9 @@ const AsistenciaView = () => {
                       return (
                         <tr key={as.id || idx} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-8 py-5">
-                            <div className="font-black text-slate-900">{socio ? `${socio.nombre} ${socio.apellido}` : 'Socio no encontrado'}</div>
+                            <div className="font-black text-slate-900">
+                              {socio ? `${socio.nombre} ${socio.apellido}` : (as.nombreSocio || 'Socio no encontrado')}
+                            </div>
                           </td>
                           <td className="px-8 py-5">
                             <span className="text-[10px] font-black uppercase bg-slate-100 px-2 py-1 rounded-lg text-slate-500">
