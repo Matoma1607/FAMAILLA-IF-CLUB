@@ -467,14 +467,14 @@ const AsistenciaView = () => {
 
       {isNewSocioModalOpen && (
         <div 
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[110] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
           onClick={() => setIsNewSocioModalOpen(false)}
         >
           <div 
-            className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]"
+            className="bg-white rounded-t-[2rem] sm:rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col my-0 sm:my-8 min-h-[50vh] sm:min-h-0"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2rem] sm:rounded-t-[2.5rem] shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-secondary">Registro Rápido</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Añadir alumno y marcar asistencia</p>
@@ -482,7 +482,7 @@ const AsistenciaView = () => {
               <button onClick={() => setIsNewSocioModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 transition-colors cursor-pointer"><X size={24} /></button>
             </div>
             
-            <div className="overflow-y-auto p-6 custom-scrollbar">
+            <div className="p-6 pb-10 sm:pb-6">
               <form onSubmit={handleQuickSocioSave} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -505,6 +505,10 @@ const AsistenciaView = () => {
                     <label className="text-[10px] font-black uppercase text-slate-400 ml-1">F. Nacimiento</label>
                     <input type="date" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={newSocio.fechaNacimiento || ''} onChange={e => setNewSocio({...newSocio, fechaNacimiento: e.target.value})} />
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha de Ingreso</label>
+                  <input type="date" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" value={newSocio.fechaInscripcion || selectedDate} onChange={e => setNewSocio({...newSocio, fechaInscripcion: e.target.value})} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tutor</label>

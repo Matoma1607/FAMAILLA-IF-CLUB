@@ -414,14 +414,14 @@ const Pagos = () => {
 
       {isModalOpen && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
           onClick={() => { setIsModalOpen(false); setEditingPago(null); setIsMultiMonth(false); }}
         >
           <div 
-            className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col max-h-[95vh]"
+            className="bg-white rounded-t-[2rem] sm:rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col my-0 sm:my-8 min-h-[50vh] sm:min-h-0"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2rem] sm:rounded-t-[2.5rem] shrink-0">
                <div>
                  <h3 className="text-xl font-bold text-secondary">{editingPago?.id ? 'Editar Cobro' : 'Registrar Cobro'}</h3>
                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tesorería Famaillá IF</p>
@@ -429,7 +429,7 @@ const Pagos = () => {
                <button onClick={() => { setIsModalOpen(false); setEditingPago(null); setIsMultiMonth(false); }} className="text-slate-400 hover:text-slate-600 p-2 transition-colors cursor-pointer"><X size={24} /></button>
             </div>
             
-            <div className="overflow-y-auto p-6 custom-scrollbar">
+            <div className="p-6 pb-10 sm:pb-6">
               <form onSubmit={handleSave} className="space-y-4">
                 {!editingPago?.id && (
                   <div className="flex items-center space-x-2 mb-2">
