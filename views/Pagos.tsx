@@ -17,7 +17,18 @@ const Pagos = () => {
   const [isMultiMonth, setIsMultiMonth] = useState(false);
   const [filterMetodo, setFilterMetodo] = useState<'TODOS' | 'EFECTIVO' | 'TRANSFERENCIA'>('TODOS');
   const [viewMode, setViewMode] = useState<'AGRUPADO' | 'DETALLADO'>('AGRUPADO');
+  const [selectedTypes, setSelectedTypes] = useState({
+    inscripcion: false,
+    mensual: true,
+    seguro: false
+  });
+  const [amounts, setAmounts] = useState({
+    inscripcion: 5000,
+    mensual: 8500,
+    seguro: 3000
+  });
 
+  const PRECIOS = { inscripcion: 5000, mensual: 8500, seguro: 3000 };
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const now = new Date();
   const mesActual = meses[now.getMonth()];
@@ -47,24 +58,62 @@ const Pagos = () => {
     
     setProcessing(true);
     try {
-      if (isMultiMonth && editingPago.selectedMeses && editingPago.selectedMeses.length > 0) {
-        const montoPorMes = (Number(editingPago.monto) || 0) / editingPago.selectedMeses.length;
-        const promises = editingPago.selectedMeses.map(m => 
-          registrarPago({
-            ...editingPago,
-            nombreSocio,
-            mes: m,
-            monto: montoPorMes,
-            nota: `${editingPago.nota || 'Cuota'} (${editingPago.selectedMeses?.join(', ')})`
-          })
-        );
+      const socio = socios.find(s => String(s.id) === String(editingPago.socioId));
+      const nombreSocio = socio ? `${socio.nombre} ${socio.apellido}` : '';
+
+      if (!editingPago.id) {
+        // Nuevo cobro: puede tener múltiples tipos
+        const promises = [];
+        const selectedMeses = isMultiMonth ? (editingPago.selectedMeses || [editingPago.mes || mesActual]) : [editingPago.mes || mesActual];
+
+        for (const mes of selectedMeses) {
+          if (selectedTypes.inscripcion) {
+            promises.push(registrarPago({
+              ...editingPago,
+              nombreSocio,
+              mes,
+              monto: amounts.inscripcion,
+              tipo: 'INSCRIPCION',
+              nota: `Inscripción ${mes}`
+            }));
+          }
+          if (selectedTypes.mensual) {
+            promises.push(registrarPago({
+              ...editingPago,
+              nombreSocio,
+              mes,
+              monto: amounts.mensual,
+              tipo: 'MENSUAL',
+              nota: `Cuota ${mes}`
+            }));
+          }
+          if (selectedTypes.seguro) {
+            promises.push(registrarPago({
+              ...editingPago,
+              nombreSocio,
+              mes,
+              monto: amounts.seguro,
+              tipo: 'SEGURO',
+              nota: `Seguro ${mes}`
+            }));
+          }
+        }
+        
+        if (promises.length === 0 && editingPago.monto) {
+          // Si no seleccionó tipos pero puso un monto (caso genérico/otro)
+          promises.push(registrarPago({ ...editingPago, nombreSocio, tipo: 'OTRO' }));
+        }
+
         await Promise.all(promises);
       } else {
+        // Edición de un registro existente
         await registrarPago({ ...editingPago, nombreSocio });
       }
+      
       setIsModalOpen(false);
       setEditingPago(null);
       setIsMultiMonth(false);
+      setSelectedTypes({ inscripcion: false, mensual: true, seguro: false });
       fetchData();
     } catch (err) {
       console.error(err);
@@ -129,6 +178,7 @@ const Pagos = () => {
           ids: [p.id],
           montoTotal: Number(p.monto) || 0,
           notas: p.nota ? [p.nota] : [],
+          tipos: p.tipo ? [p.tipo] : [],
           mesesList: [p.mes],
           estados: [p.estado],
           rawRecords: [p]
@@ -138,6 +188,9 @@ const Pagos = () => {
         const normalizedNota = p.nota ? p.nota.trim().toUpperCase() : '';
         if (normalizedNota && !groups[key].notas.some((n: string) => n.trim().toUpperCase() === normalizedNota)) {
           groups[key].notas.push(p.nota);
+        }
+        if (p.tipo && !groups[key].tipos.includes(p.tipo)) {
+          groups[key].tipos.push(p.tipo);
         }
         if (!groups[key].mesesList.includes(p.mes)) groups[key].mesesList.push(p.mes);
         if (!groups[key].estados.includes(p.estado)) groups[key].estados.push(p.estado);
@@ -178,6 +231,7 @@ const Pagos = () => {
         ...g,
         monto: g.montoTotal,
         estado: finalEstado,
+        tipo: g.tipos.length > 0 ? g.tipos.join(' + ') : 'MENSUAL',
         nota: g.notas.length > 0 ? g.notas.join(' + ') : 'Cuota Mensual',
         displayMes
       };
@@ -308,8 +362,13 @@ const Pagos = () => {
                       {socio ? `${socio.nombre} ${socio.apellido}` : (p.nombreSocio || `ID: ${p.socioId}`)}
                     </td>
                     <td className="px-8 py-5">
-                      <div className="text-[10px] font-black text-primary uppercase tracking-widest">
-                        {p.nota || 'Cuota Mensual'}
+                      <div className="flex flex-col">
+                        <div className="text-[10px] font-black text-primary uppercase tracking-widest">
+                          {p.tipo || 'MENSUAL'}
+                        </div>
+                        <div className="text-[9px] text-slate-400 font-medium">
+                          {p.nota || '-'}
+                        </div>
                       </div>
                     </td>
                     <td className="px-8 py-5">
@@ -402,16 +461,85 @@ const Pagos = () => {
                     {socios.map(s => <option key={s.id} value={s.id}>{s.nombre} {s.apellido}</option>)}
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Concepto / Nota</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ej: Cuota Marzo, Inscripción, Ropa..." 
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" 
-                    value={editingPago?.nota || ""} 
-                    onChange={e => setEditingPago({...editingPago, nota: e.target.value})} 
-                  />
-                </div>
+
+                {!editingPago?.id && (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[9px] font-black uppercase tracking-widest text-secondary">Conceptos a Cobrar</h4>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Inscripción */}
+                      <div className="flex items-center justify-between gap-4">
+                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                          <input type="checkbox" className="hidden" checked={selectedTypes.inscripcion} onChange={e => setSelectedTypes({...selectedTypes, inscripcion: e.target.checked})} />
+                          <span className="text-[10px] font-black uppercase">Inscripción</span>
+                        </label>
+                        <input 
+                          type="number" 
+                          disabled={!selectedTypes.inscripcion}
+                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary disabled:opacity-50"
+                          value={amounts.inscripcion}
+                          onChange={e => setAmounts({...amounts, inscripcion: Number(e.target.value)})}
+                        />
+                      </div>
+
+                      {/* Mensual */}
+                      <div className="flex items-center justify-between gap-4">
+                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.mensual ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                          <input type="checkbox" className="hidden" checked={selectedTypes.mensual} onChange={e => setSelectedTypes({...selectedTypes, mensual: e.target.checked})} />
+                          <span className="text-[10px] font-black uppercase">Mensual</span>
+                        </label>
+                        <input 
+                          type="number" 
+                          disabled={!selectedTypes.mensual}
+                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary disabled:opacity-50"
+                          value={amounts.mensual}
+                          onChange={e => setAmounts({...amounts, mensual: Number(e.target.value)})}
+                        />
+                      </div>
+
+                      {/* Seguro */}
+                      <div className="flex items-center justify-between gap-4">
+                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.seguro ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                          <input type="checkbox" className="hidden" checked={selectedTypes.seguro} onChange={e => setSelectedTypes({...selectedTypes, seguro: e.target.checked})} />
+                          <span className="text-[10px] font-black uppercase">Seguro</span>
+                        </label>
+                        <input 
+                          type="number" 
+                          disabled={!selectedTypes.seguro}
+                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary disabled:opacity-50"
+                          value={amounts.seguro}
+                          onChange={e => setAmounts({...amounts, seguro: Number(e.target.value)})}
+                        />
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                        <span className="text-[10px] font-black text-slate-400 uppercase">Total a Cobrar</span>
+                        <span className="text-lg font-black text-primary">
+                          ${(
+                            (selectedTypes.inscripcion ? amounts.inscripcion : 0) +
+                            (selectedTypes.mensual ? amounts.mensual : 0) +
+                            (selectedTypes.seguro ? amounts.seguro : 0)
+                          ).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {editingPago?.id && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Concepto / Nota</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej: Cuota Marzo, Inscripción, Ropa..." 
+                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" 
+                      value={editingPago?.nota || ""} 
+                      onChange={e => setEditingPago({...editingPago, nota: e.target.value})} 
+                    />
+                  </div>
+                )}
 
                 {isMultiMonth ? (
                   <div className="space-y-2">
@@ -465,22 +593,9 @@ const Pagos = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
+                {!editingPago?.id ? (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">
-                      {isMultiMonth ? 'Monto Total' : 'Monto'}
-                    </label>
-                    <input 
-                      type="number" 
-                      required 
-                      placeholder={isMultiMonth ? "25500" : "8500"} 
-                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:border-primary transition-all" 
-                      value={editingPago?.monto || ""} 
-                      onChange={e => setEditingPago({...editingPago, monto: Number(e.target.value)})} 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método</label>
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método de Pago</label>
                     <select 
                       required 
                       className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" 
@@ -491,7 +606,32 @@ const Pagos = () => {
                       <option value="TRANSFERENCIA">Transferencia</option>
                     </select>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Monto</label>
+                      <input 
+                        type="number" 
+                        required 
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:border-primary transition-all" 
+                        value={editingPago?.monto || ""} 
+                        onChange={e => setEditingPago({...editingPago, monto: Number(e.target.value)})} 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Método</label>
+                      <select 
+                        required 
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none appearance-none text-sm" 
+                        value={editingPago?.metodo || "EFECTIVO"} 
+                        onChange={e => setEditingPago({...editingPago, metodo: e.target.value as any})}
+                      >
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="TRANSFERENCIA">Transferencia</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
 
                 {isMultiMonth && editingPago?.selectedMeses && editingPago.selectedMeses.length > 0 && (
                   <p className="text-[9px] font-bold text-slate-400 italic -mt-2">

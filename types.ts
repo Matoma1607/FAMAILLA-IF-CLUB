@@ -30,6 +30,7 @@ export interface Pago {
   metodo?: 'EFECTIVO' | 'TRANSFERENCIA';
   nombreSocio?: string;
   nota?: string;
+  tipo?: 'INSCRIPCION' | 'MENSUAL' | 'SEGURO' | 'OTRO';
 }
 
 export interface Entrenamiento {

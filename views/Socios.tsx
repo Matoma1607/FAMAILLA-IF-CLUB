@@ -59,22 +59,49 @@ const Socios = () => {
 
       if (isNew && socioId) {
         // Registrar deuda PENDIENTE si hay opciones seleccionadas
-        const conceptos = [];
-        if (initialPayments.inscripcion) conceptos.push('Inscripción');
-        if (initialPayments.mensual) conceptos.push('Mensual');
-        if (initialPayments.seguro) conceptos.push('Seguro');
-
-        if (conceptos.length > 0 && editingSocio) {
-          await registrarPago({
+        const promises = [];
+        if (initialPayments.inscripcion) {
+          promises.push(registrarPago({
             socioId: String(socioId).trim(),
-            nombreSocio: `${editingSocio.nombre} ${editingSocio.apellido}`,
+            nombreSocio: `${editingSocio?.nombre || ''} ${editingSocio?.apellido || ''}`,
             mes: mesActual,
             anio: anioActual,
-            monto: 0,
+            monto: PRECIOS.inscripcion,
             estado: 'PENDIENTE',
             metodo: 'EFECTIVO',
-            nota: conceptos.join(' + ')
-          });
+            tipo: 'INSCRIPCION',
+            nota: 'Inscripción inicial'
+          }));
+        }
+        if (initialPayments.mensual) {
+          promises.push(registrarPago({
+            socioId: String(socioId).trim(),
+            nombreSocio: `${editingSocio?.nombre || ''} ${editingSocio?.apellido || ''}`,
+            mes: mesActual,
+            anio: anioActual,
+            monto: PRECIOS.mensual,
+            estado: 'PENDIENTE',
+            metodo: 'EFECTIVO',
+            tipo: 'MENSUAL',
+            nota: 'Cuota mensual inicial'
+          }));
+        }
+        if (initialPayments.seguro) {
+          promises.push(registrarPago({
+            socioId: String(socioId).trim(),
+            nombreSocio: `${editingSocio?.nombre || ''} ${editingSocio?.apellido || ''}`,
+            mes: mesActual,
+            anio: anioActual,
+            monto: PRECIOS.seguro,
+            estado: 'PENDIENTE',
+            metodo: 'EFECTIVO',
+            tipo: 'SEGURO',
+            nota: 'Seguro inicial'
+          }));
+        }
+
+        if (promises.length > 0) {
+          await Promise.all(promises);
         }
       }
 
@@ -121,19 +148,26 @@ const Socios = () => {
     }
   };
 
-  const getPaymentStatus = (socioId: string) => {
+  const getDetailedStatus = (socioId: string) => {
     const pagosSocioMes = pagos.filter(p => 
       String(p.socioId).trim() === String(socioId).trim() && 
       String(p.mes).trim() === String(mesActual).trim() && 
       String(p.anio).trim() === String(anioActual).trim()
     );
 
-    // Si no tiene registros para el mes actual, está vencido
-    if (pagosSocioMes.length === 0) return false;
+    const status = {
+      inscripcion: pagosSocioMes.find(p => p.tipo === 'INSCRIPCION')?.estado || 'N/A',
+      mensual: pagosSocioMes.find(p => p.tipo === 'MENSUAL')?.estado || (pagosSocioMes.length === 0 ? 'PENDIENTE' : 'N/A'),
+      seguro: pagosSocioMes.find(p => p.tipo === 'SEGURO')?.estado || 'N/A'
+    };
 
-    // Si tiene algún pago PENDIENTE para el mes actual, está vencido
-    const tienePendientes = pagosSocioMes.some(p => p.estado === 'PENDIENTE');
-    return !tienePendientes;
+    return status;
+  };
+
+  const getPaymentStatus = (socioId: string) => {
+    const status = getDetailedStatus(socioId);
+    // Si mensual es PENDIENTE o no existe, está vencido
+    return status.mensual === 'PAGADO';
   };
 
   const filteredSocios = socios.filter(s => 
@@ -239,9 +273,29 @@ const Socios = () => {
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                      <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                        <Check size={14} strokeWidth={3} />
-                        <span>{isPaid ? 'AL DÍA' : 'VENCIDO'}</span>
+                      <div className="flex flex-col space-y-1">
+                        <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit ${isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                          {isPaid ? <Check size={14} strokeWidth={3} /> : <Clock size={14} strokeWidth={3} />}
+                          <span>{isPaid ? 'AL DÍA' : 'VENCIDO'}</span>
+                        </div>
+                        <div className="flex space-x-1 mt-1">
+                          {(() => {
+                            const status = getDetailedStatus(socio.id);
+                            return (
+                              <>
+                                {status.inscripcion !== 'N/A' && (
+                                  <span title="Inscripción" className={`w-2 h-2 rounded-full ${status.inscripcion === 'PAGADO' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                )}
+                                {status.mensual !== 'N/A' && (
+                                  <span title="Mensual" className={`w-2 h-2 rounded-full ${status.mensual === 'PAGADO' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                )}
+                                {status.seguro !== 'N/A' && (
+                                  <span title="Seguro" className={`w-2 h-2 rounded-full ${status.seguro === 'PAGADO' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right">
