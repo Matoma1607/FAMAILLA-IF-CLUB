@@ -408,15 +408,15 @@ const Socios = () => {
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">
-                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
                         <input type="checkbox" className="hidden" checked={initialPayments.inscripcion} onChange={e => setInitialPayments({...initialPayments, inscripcion: e.target.checked})} />
                         <span className="text-[8px] font-black uppercase">Inscripción</span>
                       </label>
-                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.mensual ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.mensual ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
                         <input type="checkbox" className="hidden" checked={initialPayments.mensual} onChange={e => setInitialPayments({...initialPayments, mensual: e.target.checked})} />
                         <span className="text-[8px] font-black uppercase">Mensual</span>
                       </label>
-                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.seguro ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.seguro ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
                         <input type="checkbox" className="hidden" checked={initialPayments.seguro} onChange={e => setInitialPayments({...initialPayments, seguro: e.target.checked})} />
                         <span className="text-[8px] font-black uppercase">Seguro</span>
                       </label>

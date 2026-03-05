@@ -481,7 +481,7 @@ const Pagos = () => {
                     <div className="space-y-3">
                       {/* Inscripción */}
                       <div className="flex items-center justify-between gap-4">
-                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.inscripcion ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.inscripcion ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
                           <input type="checkbox" className="hidden" checked={selectedTypes.inscripcion} onChange={e => setSelectedTypes({...selectedTypes, inscripcion: e.target.checked})} />
                           <span className="text-[10px] font-black uppercase">Inscripción</span>
                         </label>
@@ -496,7 +496,7 @@ const Pagos = () => {
 
                       {/* Mensual */}
                       <div className="flex items-center justify-between gap-4">
-                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.mensual ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.mensual ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
                           <input type="checkbox" className="hidden" checked={selectedTypes.mensual} onChange={e => setSelectedTypes({...selectedTypes, mensual: e.target.checked})} />
                           <span className="text-[10px] font-black uppercase">Mensual</span>
                         </label>
@@ -511,7 +511,7 @@ const Pagos = () => {
 
                       {/* Seguro */}
                       <div className="flex items-center justify-between gap-4">
-                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.seguro ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.seguro ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
                           <input type="checkbox" className="hidden" checked={selectedTypes.seguro} onChange={e => setSelectedTypes({...selectedTypes, seguro: e.target.checked})} />
                           <span className="text-[10px] font-black uppercase">Seguro</span>
                         </label>
