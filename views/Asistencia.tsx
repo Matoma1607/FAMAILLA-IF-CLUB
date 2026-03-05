@@ -467,24 +467,23 @@ const AsistenciaView = () => {
 
       {isNewSocioModalOpen && (
         <div 
-          className="fixed inset-0 z-[110] overflow-y-auto bg-slate-900/60 backdrop-blur-sm px-4 py-6 sm:px-6"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6"
           onClick={() => setIsNewSocioModalOpen(false)}
         >
-          <div className="flex min-h-full items-center justify-center">
-            <div 
-              className="bg-white rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2rem] sm:rounded-t-[2.5rem] shrink-0">
-                <div>
-                  <h3 className="text-xl font-bold text-secondary">Registro Rápido</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Añadir alumno y marcar asistencia</p>
-                </div>
-                <button onClick={() => setIsNewSocioModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 transition-colors cursor-pointer"><X size={24} /></button>
+          <div 
+            className="bg-white rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col max-h-[90vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2rem] sm:rounded-t-[2.5rem] shrink-0">
+              <div>
+                <h3 className="text-xl font-bold text-secondary">Registro Rápido</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Añadir alumno y marcar asistencia</p>
               </div>
-              
-              <div className="p-6">
-                <form onSubmit={handleQuickSocioSave} className="space-y-4">
+              <button onClick={() => setIsNewSocioModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 transition-colors cursor-pointer"><X size={24} /></button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              <form onSubmit={handleQuickSocioSave} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
@@ -526,7 +525,6 @@ const AsistenciaView = () => {
             </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );
