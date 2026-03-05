@@ -244,6 +244,15 @@ const Pagos = () => {
   const totalEfectivo = pagos.filter(p => p.estado === 'PAGADO' && String(p.metodo).trim().toUpperCase() === 'EFECTIVO').reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
   const totalTransferencia = pagos.filter(p => p.estado === 'PAGADO' && String(p.metodo).trim().toUpperCase() === 'TRANSFERENCIA').reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
 
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isModalOpen]);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

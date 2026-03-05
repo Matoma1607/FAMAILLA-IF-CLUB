@@ -240,6 +240,15 @@ const AsistenciaView = () => {
 
   const reportData = getReportData();
 
+  useEffect(() => {
+    if (isNewSocioModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isNewSocioModalOpen]);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
