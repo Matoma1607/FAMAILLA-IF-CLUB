@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   CreditCard, Search, Plus, Loader2, X, Trash2, Edit2, DollarSign, Wallet, ArrowRightLeft, Check, Clock
 } from 'lucide-react';
@@ -421,7 +422,7 @@ const Pagos = () => {
         </div>
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6"
           onClick={() => { setIsModalOpen(false); setEditingPago(null); setIsMultiMonth(false); }}
@@ -679,7 +680,8 @@ const Pagos = () => {
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

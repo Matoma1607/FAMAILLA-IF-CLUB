@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   ClipboardCheck, 
   Calendar as CalendarIcon, 
@@ -474,7 +475,7 @@ const AsistenciaView = () => {
         </div>
       )}
 
-      {isNewSocioModalOpen && (
+      {isNewSocioModalOpen && createPortal(
         <div 
           className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6"
           onClick={() => setIsNewSocioModalOpen(false)}
@@ -533,7 +534,8 @@ const AsistenciaView = () => {
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
