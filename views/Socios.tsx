@@ -16,13 +16,17 @@ const Socios = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSocio, setEditingSocio] = useState<Partial<Socio> | null>(null);
-  const [initialPayments, setInitialPayments] = useState({
-    inscripcion: false,
-    mensual: false,
-    seguro: false
+  const [initialPayments, setInitialPayments] = useState(() => {
+    const saved = localStorage.getItem('peques_precios');
+    if (saved) return JSON.parse(saved);
+    return { inscripcion: 5000, mensual: 8500, seguro: 3000 };
   });
 
   const PRECIOS = { inscripcion: 5000, mensual: 8500, seguro: 3000 };
+
+  useEffect(() => {
+    localStorage.setItem('peques_precios', JSON.stringify(initialPayments));
+  }, [initialPayments]);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -59,41 +63,41 @@ const Socios = () => {
       const socioId = savedSocio?.id; 
 
       if (isNew && socioId) {
-        // Registrar deuda PENDIENTE si hay opciones seleccionadas
+        // Registrar deuda PENDIENTE si hay montos definidos
         const promises = [];
-        if (initialPayments.inscripcion) {
+        if (initialPayments.inscripcion > 0) {
           promises.push(registrarPago({
             socioId: String(socioId).trim(),
             nombreSocio: `${editingSocio?.nombre || ''} ${editingSocio?.apellido || ''}`,
             mes: mesActual,
             anio: anioActual,
-            monto: PRECIOS.inscripcion,
+            monto: initialPayments.inscripcion,
             estado: 'PENDIENTE',
             metodo: 'EFECTIVO',
             tipo: 'INSCRIPCION',
             nota: 'Inscripción inicial'
           }));
         }
-        if (initialPayments.mensual) {
+        if (initialPayments.mensual > 0) {
           promises.push(registrarPago({
             socioId: String(socioId).trim(),
             nombreSocio: `${editingSocio?.nombre || ''} ${editingSocio?.apellido || ''}`,
             mes: mesActual,
             anio: anioActual,
-            monto: PRECIOS.mensual,
+            monto: initialPayments.mensual,
             estado: 'PENDIENTE',
             metodo: 'EFECTIVO',
             tipo: 'MENSUAL',
             nota: 'Cuota mensual inicial'
           }));
         }
-        if (initialPayments.seguro) {
+        if (initialPayments.seguro > 0) {
           promises.push(registrarPago({
             socioId: String(socioId).trim(),
             nombreSocio: `${editingSocio?.nombre || ''} ${editingSocio?.apellido || ''}`,
             mes: mesActual,
             anio: anioActual,
-            monto: PRECIOS.seguro,
+            monto: initialPayments.seguro,
             estado: 'PENDIENTE',
             metodo: 'EFECTIVO',
             tipo: 'SEGURO',
@@ -108,7 +112,7 @@ const Socios = () => {
 
       setIsModalOpen(false);
       setEditingSocio(null);
-      setInitialPayments({ inscripcion: false, mensual: false, seguro: false });
+      setInitialPayments({ inscripcion: 0, mensual: 0, seguro: 0 });
       setTimeout(() => fetchData(), 500);
     } catch (err: any) {
       setError(`Error al guardar: ${err.message}`);
@@ -219,8 +223,10 @@ const Socios = () => {
           </button>
           <button 
             onClick={() => { 
+              const saved = localStorage.getItem('peques_precios');
+              const currentPrecios = saved ? JSON.parse(saved) : { inscripcion: 5000, mensual: 8500, seguro: 3000 };
               setEditingSocio({ categoria: Category.CHUPETONES, activo: true, fechaInscripcion: fechaHoy }); 
-              setInitialPayments({ inscripcion: false, mensual: false, seguro: false });
+              setInitialPayments(currentPrecios);
               setIsModalOpen(true); 
             }}
             className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center space-x-2"
@@ -408,18 +414,54 @@ const Socios = () => {
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">
-                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.inscripcion ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
-                        <input type="checkbox" className="hidden" checked={initialPayments.inscripcion} onChange={e => setInitialPayments({...initialPayments, inscripcion: e.target.checked})} />
-                        <span className="text-[8px] font-black uppercase">Inscripción</span>
-                      </label>
-                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.mensual ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
-                        <input type="checkbox" className="hidden" checked={initialPayments.mensual} onChange={e => setInitialPayments({...initialPayments, mensual: e.target.checked})} />
-                        <span className="text-[8px] font-black uppercase">Mensual</span>
-                      </label>
-                      <label className={`flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all cursor-pointer ${initialPayments.seguro ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
-                        <input type="checkbox" className="hidden" checked={initialPayments.seguro} onChange={e => setInitialPayments({...initialPayments, seguro: e.target.checked})} />
-                        <span className="text-[8px] font-black uppercase">Seguro</span>
-                      </label>
+                      <div className={`flex flex-col p-2 rounded-xl border-2 transition-all ${initialPayments.inscripcion > 0 ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'}`}>
+                        <button 
+                          type="button"
+                          onClick={() => setInitialPayments({...initialPayments, inscripcion: initialPayments.inscripcion > 0 ? 0 : PRECIOS.inscripcion})}
+                          className={`w-full mb-1 font-black text-[8px] uppercase text-center ${initialPayments.inscripcion > 0 ? 'text-emerald-700' : 'text-rose-700'}`}
+                        >
+                          Inscripción
+                        </button>
+                        <input 
+                          type="number" 
+                          placeholder="0"
+                          className="w-full bg-white/50 border border-slate-200/50 rounded-lg text-[10px] font-bold outline-none focus:bg-white transition-all text-center py-1"
+                          value={initialPayments.inscripcion || ''}
+                          onChange={e => setInitialPayments({...initialPayments, inscripcion: Number(e.target.value)})}
+                        />
+                      </div>
+                      <div className={`flex flex-col p-2 rounded-xl border-2 transition-all ${initialPayments.mensual > 0 ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'}`}>
+                        <button 
+                          type="button"
+                          onClick={() => setInitialPayments({...initialPayments, mensual: initialPayments.mensual > 0 ? 0 : PRECIOS.mensual})}
+                          className={`w-full mb-1 font-black text-[8px] uppercase text-center ${initialPayments.mensual > 0 ? 'text-emerald-700' : 'text-rose-700'}`}
+                        >
+                          Mensual
+                        </button>
+                        <input 
+                          type="number" 
+                          placeholder="0"
+                          className="w-full bg-white/50 border border-slate-200/50 rounded-lg text-[10px] font-bold outline-none focus:bg-white transition-all text-center py-1"
+                          value={initialPayments.mensual || ''}
+                          onChange={e => setInitialPayments({...initialPayments, mensual: Number(e.target.value)})}
+                        />
+                      </div>
+                      <div className={`flex flex-col p-2 rounded-xl border-2 transition-all ${initialPayments.seguro > 0 ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'}`}>
+                        <button 
+                          type="button"
+                          onClick={() => setInitialPayments({...initialPayments, seguro: initialPayments.seguro > 0 ? 0 : PRECIOS.seguro})}
+                          className={`w-full mb-1 font-black text-[8px] uppercase text-center ${initialPayments.seguro > 0 ? 'text-emerald-700' : 'text-rose-700'}`}
+                        >
+                          Seguro
+                        </button>
+                        <input 
+                          type="number" 
+                          placeholder="0"
+                          className="w-full bg-white/50 border border-slate-200/50 rounded-lg text-[10px] font-bold outline-none focus:bg-white transition-all text-center py-1"
+                          value={initialPayments.seguro || ''}
+                          onChange={e => setInitialPayments({...initialPayments, seguro: Number(e.target.value)})}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

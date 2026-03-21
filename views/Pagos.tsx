@@ -20,16 +20,20 @@ const Pagos = () => {
   const [viewMode, setViewMode] = useState<'AGRUPADO' | 'DETALLADO'>('AGRUPADO');
   const [selectedTypes, setSelectedTypes] = useState({
     inscripcion: false,
-    mensual: true,
+    mensual: false,
     seguro: false
   });
-  const [amounts, setAmounts] = useState({
-    inscripcion: 5000,
-    mensual: 8500,
-    seguro: 3000
+  const [amounts, setAmounts] = useState(() => {
+    const saved = localStorage.getItem('peques_precios');
+    if (saved) return JSON.parse(saved);
+    return { inscripcion: 5000, mensual: 8500, seguro: 3000 };
   });
 
   const PRECIOS = { inscripcion: 5000, mensual: 8500, seguro: 3000 };
+
+  useEffect(() => {
+    localStorage.setItem('peques_precios', JSON.stringify(amounts));
+  }, [amounts]);
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const now = new Date();
   const mesActual = meses[now.getMonth()];
@@ -263,7 +267,12 @@ const Pagos = () => {
         </div>
         <button 
           onClick={() => { 
-            setEditingPago({ mes: mesActual, anio: anioActual, monto: 8500, estado: 'PAGADO', metodo: 'EFECTIVO', selectedMeses: [mesActual] }); 
+            const saved = localStorage.getItem('peques_precios');
+            const currentPrecios = saved ? JSON.parse(saved) : { inscripcion: 0, mensual: 0, seguro: 0 };
+            
+            setEditingPago({ mes: mesActual, anio: anioActual, monto: 0, estado: 'PAGADO', metodo: 'EFECTIVO', selectedMeses: [mesActual] }); 
+            setSelectedTypes({ inscripcion: false, mensual: false, seguro: false });
+            setAmounts(currentPrecios);
             setIsMultiMonth(false);
             setIsModalOpen(true); 
           }} 
@@ -481,46 +490,79 @@ const Pagos = () => {
                     <div className="space-y-3">
                       {/* Inscripción */}
                       <div className="flex items-center justify-between gap-4">
-                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.inscripcion ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
-                          <input type="checkbox" className="hidden" checked={selectedTypes.inscripcion} onChange={e => setSelectedTypes({...selectedTypes, inscripcion: e.target.checked})} />
+                        <label 
+                          onClick={() => {
+                            const next = !selectedTypes.inscripcion;
+                            setSelectedTypes({...selectedTypes, inscripcion: next});
+                            if (next && amounts.inscripcion === 0) setAmounts({...amounts, inscripcion: PRECIOS.inscripcion});
+                            if (!next) setAmounts({...amounts, inscripcion: 0});
+                          }}
+                          className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.inscripcion ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}
+                        >
                           <span className="text-[10px] font-black uppercase">Inscripción</span>
                         </label>
                         <input 
                           type="number" 
-                          disabled={!selectedTypes.inscripcion}
-                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary disabled:opacity-50"
-                          value={amounts.inscripcion}
-                          onChange={e => setAmounts({...amounts, inscripcion: Number(e.target.value)})}
+                          placeholder="0"
+                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary transition-all text-center"
+                          value={amounts.inscripcion || ''}
+                          onChange={e => {
+                            const val = Number(e.target.value);
+                            setAmounts({...amounts, inscripcion: val});
+                            setSelectedTypes(prev => ({...prev, inscripcion: val > 0}));
+                          }}
                         />
                       </div>
 
                       {/* Mensual */}
                       <div className="flex items-center justify-between gap-4">
-                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.mensual ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
-                          <input type="checkbox" className="hidden" checked={selectedTypes.mensual} onChange={e => setSelectedTypes({...selectedTypes, mensual: e.target.checked})} />
+                        <label 
+                          onClick={() => {
+                            const next = !selectedTypes.mensual;
+                            setSelectedTypes({...selectedTypes, mensual: next});
+                            if (next && amounts.mensual === 0) setAmounts({...amounts, mensual: PRECIOS.mensual});
+                            if (!next) setAmounts({...amounts, mensual: 0});
+                          }}
+                          className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.mensual ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}
+                        >
                           <span className="text-[10px] font-black uppercase">Mensual</span>
                         </label>
                         <input 
                           type="number" 
-                          disabled={!selectedTypes.mensual}
-                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary disabled:opacity-50"
-                          value={amounts.mensual}
-                          onChange={e => setAmounts({...amounts, mensual: Number(e.target.value)})}
+                          placeholder="0"
+                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary transition-all text-center"
+                          value={amounts.mensual || ''}
+                          onChange={e => {
+                            const val = Number(e.target.value);
+                            setAmounts({...amounts, mensual: val});
+                            setSelectedTypes(prev => ({...prev, mensual: val > 0}));
+                          }}
                         />
                       </div>
 
                       {/* Seguro */}
                       <div className="flex items-center justify-between gap-4">
-                        <label className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.seguro ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}>
-                          <input type="checkbox" className="hidden" checked={selectedTypes.seguro} onChange={e => setSelectedTypes({...selectedTypes, seguro: e.target.checked})} />
+                        <label 
+                          onClick={() => {
+                            const next = !selectedTypes.seguro;
+                            setSelectedTypes({...selectedTypes, seguro: next});
+                            if (next && amounts.seguro === 0) setAmounts({...amounts, seguro: PRECIOS.seguro});
+                            if (!next) setAmounts({...amounts, seguro: 0});
+                          }}
+                          className={`flex-1 flex items-center space-x-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${selectedTypes.seguro ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-rose-50 border-rose-500 text-rose-700'}`}
+                        >
                           <span className="text-[10px] font-black uppercase">Seguro</span>
                         </label>
                         <input 
                           type="number" 
-                          disabled={!selectedTypes.seguro}
-                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary disabled:opacity-50"
-                          value={amounts.seguro}
-                          onChange={e => setAmounts({...amounts, seguro: Number(e.target.value)})}
+                          placeholder="0"
+                          className="w-24 p-2 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:border-primary transition-all text-center"
+                          value={amounts.seguro || ''}
+                          onChange={e => {
+                            const val = Number(e.target.value);
+                            setAmounts({...amounts, seguro: val});
+                            setSelectedTypes(prev => ({...prev, seguro: val > 0}));
+                          }}
                         />
                       </div>
 
