@@ -19,7 +19,8 @@ import {
   ClipboardCheck,
   ShieldCheck,
   Loader2,
-  Trophy
+  Trophy,
+  ArrowUp
 } from 'lucide-react';
 
 const SidebarItem: React.FC<{ to: string, icon: React.ElementType, label: string, active: boolean }> = ({ to, icon: Icon, label, active }) => (
@@ -116,10 +117,47 @@ const Login: React.FC<{ onLogin: (user: any) => void }> = ({ onLogin }) => {
 
 const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.ReactNode }> = ({ user, onLogout, children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const location = useLocation();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const isOwner = user?.rol === 'owner';
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setShowScrollTop(container.scrollTop > 300);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Reset scroll on route change
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [location.pathname]);
+
+  const scrollToTop = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scrollStep = () => {
+      if (container.scrollTop > 0) {
+        // Calculate a small step for "slow" effect
+        // The higher the divisor, the slower it goes
+        const speed = Math.max(container.scrollTop / 15, 5); 
+        container.scrollTop -= speed;
+        requestAnimationFrame(scrollStep);
+      }
+    };
+    requestAnimationFrame(scrollStep);
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -166,7 +204,20 @@ const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.Rea
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8 no-scrollbar">{children}</div>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 lg:p-8 no-scrollbar relative scroll-smooth">
+          {children}
+          
+          {/* Botón Scroll to Top */}
+          {showScrollTop && (
+            <button
+              onClick={scrollToTop}
+              className="fixed bottom-8 right-8 p-4 bg-primary text-white rounded-2xl shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all z-50 animate-bounce-subtle"
+              title="Subir"
+            >
+              <ArrowUp size={24} />
+            </button>
+          )}
+        </div>
       </main>
     </div>
   );
