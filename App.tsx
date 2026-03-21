@@ -144,18 +144,9 @@ const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.Rea
   }, [location.pathname]);
 
   const scrollToTop = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const scrollStep = () => {
-      if (container.scrollTop > 0) {
-        // Reduced divisor from 15 to 8 for a faster but still smooth "ease-out" effect
-        const speed = Math.max(container.scrollTop / 8, 12); 
-        container.scrollTop -= speed;
-        requestAnimationFrame(scrollStep);
-      }
-    };
-    requestAnimationFrame(scrollStep);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
   };
 
   return (
@@ -203,7 +194,7 @@ const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.Rea
             </div>
           </div>
         </header>
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 lg:p-8 no-scrollbar relative scroll-smooth">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 lg:p-8 no-scrollbar relative">
           {children}
           
           {/* Botón Scroll to Top */}
