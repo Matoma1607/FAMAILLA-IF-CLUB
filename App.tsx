@@ -149,9 +149,8 @@ const AppLayout: React.FC<{ user: any, onLogout: () => void, children: React.Rea
 
     const scrollStep = () => {
       if (container.scrollTop > 0) {
-        // Calculate a small step for "slow" effect
-        // The higher the divisor, the slower it goes
-        const speed = Math.max(container.scrollTop / 15, 5); 
+        // Reduced divisor from 15 to 8 for a faster but still smooth "ease-out" effect
+        const speed = Math.max(container.scrollTop / 8, 12); 
         container.scrollTop -= speed;
         requestAnimationFrame(scrollStep);
       }
