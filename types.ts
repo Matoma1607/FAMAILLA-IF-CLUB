@@ -64,6 +64,17 @@ export interface FechaLiga {
   condicion: 'LOCAL' | 'VISITANTE';
 }
 
+export interface PagoPartido {
+  id: string;
+  socioId: string;
+  nombreSocio: string;
+  categoria: Category;
+  fecha: string;
+  tipo: 'LOCAL' | 'VIAJE';
+  monto: number;
+  rival: string;
+}
+
 // Added Foto interface for the gallery view
 export interface Foto {
   id: string;
