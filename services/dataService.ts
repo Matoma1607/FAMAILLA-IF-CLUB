@@ -1,7 +1,7 @@
 
-import { Socio, Pago, Entrenamiento, Asistencia, Foto, FechaLiga } from '../types';
+import { Socio, Pago, Entrenamiento, Asistencia, Foto, FechaLiga, PagoPartido } from '../types';
 
-export const GAS_URL = 'https://script.google.com/macros/s/AKfycbyi4IWbkejQF200m4OVZjuR_sQ_qKAxEK1RzgSeq7O-zWwLe9OLSC9lPBS8zCOiMmaf/exec';
+export const GAS_URL = 'https://script.google.com/macros/s/AKfycbwmUEihlpq_2hfXJajHyrIYyfewB6GIsTEFTVq6yLy7Ytb8zL3kRP4LUCcKhrIOIrjd/exec';
 
 const getUserToken = () => {
   const session = localStorage.getItem('peques_session');
@@ -142,4 +142,18 @@ export const saveFechaLiga = async (fecha: any) => {
 
 export const deleteFechaLiga = async (id: string) => {
   return await request('eliminarFila', { sheet: 'FechasLiga', id });
+};
+
+export const getPagosPartidos = async (): Promise<PagoPartido[]> => {
+  const res = await request('obtenerPagosPartidos');
+  return Array.isArray(res) ? res : [];
+};
+
+export const savePagoPartido = async (pago: any) => {
+  const payload = { ...pago, id: pago.id || `PP-${Date.now()}` };
+  return await request('guardarPagoPartido', payload);
+};
+
+export const deletePagoPartido = async (id: string) => {
+  return await request('eliminarFila', { sheet: 'PagosPartidos', id });
 };
