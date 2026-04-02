@@ -19,9 +19,15 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
   // State for match payment
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
-  const [paymentData, setPaymentData] = useState({
+  const [paymentData, setPaymentData] = useState<{
+    id?: string;
+    monto: number;
+    tipo: 'LOCAL' | 'VIAJE';
+    rival: string;
+    fecha: string;
+  }>({
     monto: 0,
-    tipo: 'LOCAL' as 'LOCAL' | 'VIAJE',
+    tipo: 'LOCAL',
     rival: '',
     fecha: new Date().toISOString().split('T')[0]
   });
@@ -33,6 +39,9 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
     fechaDesde: '',
     fechaHasta: ''
   });
+
+  const normalizeDate = (d: string) => d ? d.split('T')[0] : '';
+  const todayStr = normalizeDate(new Date().toISOString());
 
   const fetchData = async () => {
     setLoading(true);
@@ -85,6 +94,12 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
       await savePagoPartido(nuevoPago);
       setIsPaymentModalOpen(false);
       setSelectedSocio(null);
+      setPaymentData({
+        monto: 0,
+        tipo: 'LOCAL',
+        rival: '',
+        fecha: new Date().toISOString().split('T')[0]
+      });
       await fetchData();
     } catch (err) {
       console.error(err);
@@ -286,10 +301,6 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
             ) : (
               filteredSocios.map(s => {
                 const isSelected = selectedSocio?.id === s.id;
-                
-                // Normalización de fechas para comparación robusta
-                const normalizeDate = (d: string) => d ? d.split('T')[0] : '';
-                const todayStr = normalizeDate(new Date().toISOString());
                 const checkDate = isPaymentModalOpen ? normalizeDate(paymentData.fecha) : todayStr;
                 
                 const hasPaymentToday = pagosPartidos.some(p => {
@@ -303,10 +314,29 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                     key={s.id}
                     onClick={() => {
                       setSelectedSocio(s);
-                      setPaymentData({
-                        ...paymentData,
-                        rival: fechas.find(f => f.categoria === s.categoria)?.rival || ''
-                      });
+                      
+                      // Buscar si ya existe un pago para este socio hoy
+                      const existingPayment = pagosPartidos.find(p => 
+                        String(p.socioId) === String(s.id) && 
+                        normalizeDate(p.fecha) === todayStr
+                      );
+
+                      if (existingPayment) {
+                        setPaymentData({
+                          id: existingPayment.id,
+                          monto: existingPayment.monto,
+                          tipo: existingPayment.tipo,
+                          rival: existingPayment.rival,
+                          fecha: normalizeDate(existingPayment.fecha)
+                        });
+                      } else {
+                        setPaymentData({
+                          monto: 0,
+                          tipo: 'LOCAL',
+                          rival: fechas.find(f => f.categoria === s.categoria)?.rival || '',
+                          fecha: todayStr
+                        });
+                      }
                       setIsPaymentModalOpen(true);
                     }}
                     className={`flex items-center justify-between p-5 rounded-3xl border transition-all group text-left ${
@@ -558,7 +588,16 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
       {isPaymentModalOpen && isOwner && selectedSocio && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-          onClick={() => { setIsPaymentModalOpen(false); setSelectedSocio(null); }}
+          onClick={() => { 
+            setIsPaymentModalOpen(false); 
+            setSelectedSocio(null); 
+            setPaymentData({
+              monto: 0,
+              tipo: 'LOCAL',
+              rival: '',
+              fecha: new Date().toISOString().split('T')[0]
+            });
+          }}
         >
           <div 
             className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-fade-in relative flex flex-col"
@@ -566,10 +605,21 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
           >
             <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2.5rem] shrink-0">
               <div>
-                <h3 className="text-xl font-bold text-secondary">Registrar Arancel</h3>
+                <h3 className="text-xl font-bold text-secondary">
+                  {paymentData.id ? 'Editar Arancel' : 'Registrar Arancel'}
+                </h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{selectedSocio.nombre} {selectedSocio.apellido}</p>
               </div>
-              <button onClick={() => { setIsPaymentModalOpen(false); setSelectedSocio(null); }} className="text-slate-400 hover:text-slate-600 p-2 transition-colors cursor-pointer"><X size={24} /></button>
+              <button onClick={() => { 
+                setIsPaymentModalOpen(false); 
+                setSelectedSocio(null); 
+                setPaymentData({
+                  monto: 0,
+                  tipo: 'LOCAL',
+                  rival: '',
+                  fecha: new Date().toISOString().split('T')[0]
+                });
+              }} className="text-slate-400 hover:text-slate-600 p-2 transition-colors cursor-pointer"><X size={24} /></button>
             </div>
             
             <div className="p-6">
@@ -630,7 +680,7 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                 </div>
 
                 <button type="submit" disabled={processing} className="w-full bg-primary text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 mt-2 flex items-center justify-center space-x-2 active:scale-[0.98] transition-all">
-                  {processing ? <Loader2 className="animate-spin" size={18} /> : <span>REGISTRAR PAGO</span>}
+                  {processing ? <Loader2 className="animate-spin" size={18} /> : <span>{paymentData.id ? 'ACTUALIZAR PAGO' : 'REGISTRAR PAGO'}</span>}
                 </button>
               </form>
             </div>
