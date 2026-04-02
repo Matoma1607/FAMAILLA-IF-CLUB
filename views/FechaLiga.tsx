@@ -286,14 +286,17 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
             ) : (
               filteredSocios.map(s => {
                 const isSelected = selectedSocio?.id === s.id;
-                // Use a stable "today" for the check when modal is closed
-                const todayStr = new Date().toISOString().split('T')[0];
-                const checkDate = isPaymentModalOpen ? paymentData.fecha : todayStr;
                 
-                const hasPaymentToday = pagosPartidos.some(p => 
-                  String(p.socioId) === String(s.id) && 
-                  (p.fecha === checkDate || p.fecha === todayStr)
-                );
+                // Normalización de fechas para comparación robusta
+                const normalizeDate = (d: string) => d ? d.split('T')[0] : '';
+                const todayStr = normalizeDate(new Date().toISOString());
+                const checkDate = isPaymentModalOpen ? normalizeDate(paymentData.fecha) : todayStr;
+                
+                const hasPaymentToday = pagosPartidos.some(p => {
+                  const pDate = normalizeDate(p.fecha);
+                  return String(p.socioId) === String(s.id) && 
+                         (pDate === checkDate || pDate === todayStr);
+                });
                 
                 return (
                   <button
@@ -310,7 +313,7 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                       isSelected 
                         ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-100 ring-2 ring-emerald-500/20' 
                         : hasPaymentToday
-                          ? 'bg-emerald-50/40 border-emerald-200'
+                          ? 'bg-emerald-50 border-emerald-200 shadow-sm'
                           : 'bg-white border-slate-100 hover:border-primary/30 hover:shadow-xl'
                     }`}
                   >
@@ -319,7 +322,7 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                         isSelected 
                           ? 'bg-emerald-500 text-white' 
                           : hasPaymentToday
-                            ? 'bg-emerald-100 text-emerald-600'
+                            ? 'bg-emerald-500 text-white'
                             : 'bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary'
                       }`}>
                         {isSelected || hasPaymentToday ? <Check size={24} strokeWidth={3} /> : <Users size={24} />}
@@ -335,8 +338,8 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                             </span>
                           )}
                           {hasPaymentToday && !isSelected && (
-                            <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
-                              ¡Pagado Hoy!
+                            <span className="bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-sm">
+                              ¡PAGADO HOY!
                             </span>
                           )}
                         </div>
