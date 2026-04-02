@@ -286,7 +286,14 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
             ) : (
               filteredSocios.map(s => {
                 const isSelected = selectedSocio?.id === s.id;
-                const hasPaymentToday = pagosPartidos.some(p => p.socioId === s.id && p.fecha === paymentData.fecha);
+                // Use a stable "today" for the check when modal is closed
+                const todayStr = new Date().toISOString().split('T')[0];
+                const checkDate = isPaymentModalOpen ? paymentData.fecha : todayStr;
+                
+                const hasPaymentToday = pagosPartidos.some(p => 
+                  String(p.socioId) === String(s.id) && 
+                  (p.fecha === checkDate || p.fecha === todayStr)
+                );
                 
                 return (
                   <button
@@ -301,9 +308,9 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                     }}
                     className={`flex items-center justify-between p-5 rounded-3xl border transition-all group text-left ${
                       isSelected 
-                        ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-100' 
+                        ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-100 ring-2 ring-emerald-500/20' 
                         : hasPaymentToday
-                          ? 'bg-slate-50/50 border-slate-200 opacity-80'
+                          ? 'bg-emerald-50/40 border-emerald-200'
                           : 'bg-white border-slate-100 hover:border-primary/30 hover:shadow-xl'
                     }`}
                   >
@@ -315,11 +322,11 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                             ? 'bg-emerald-100 text-emerald-600'
                             : 'bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary'
                       }`}>
-                        {isSelected || hasPaymentToday ? <Check size={24} /> : <Users size={24} />}
+                        {isSelected || hasPaymentToday ? <Check size={24} strokeWidth={3} /> : <Users size={24} />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className={`font-black uppercase tracking-tight ${isSelected ? 'text-emerald-700' : 'text-slate-900'}`}>
+                          <h4 className={`font-black uppercase tracking-tight ${isSelected || hasPaymentToday ? 'text-emerald-700' : 'text-slate-900'}`}>
                             {s.nombre} {s.apellido}
                           </h4>
                           {isSelected && (
@@ -328,17 +335,17 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                             </span>
                           )}
                           {hasPaymentToday && !isSelected && (
-                            <span className="bg-emerald-100 text-emerald-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
-                              Registrado
+                            <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                              ¡Pagado Hoy!
                             </span>
                           )}
                         </div>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-emerald-600/60' : 'text-slate-400'}`}>
+                        <p className={`text-[10px] font-bold uppercase tracking-widest ${isSelected || hasPaymentToday ? 'text-emerald-600/60' : 'text-slate-400'}`}>
                           {s.categoria}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight size={20} className={`${isSelected ? 'text-emerald-500' : 'text-slate-300'} group-hover:text-primary group-hover:translate-x-1 transition-all`} />
+                    <ChevronRight size={20} className={`${isSelected || hasPaymentToday ? 'text-emerald-500' : 'text-slate-300'} group-hover:text-primary group-hover:translate-x-1 transition-all`} />
                   </button>
                 );
               })
