@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
-  Trophy, MapPin, Clock, Plus, Loader2, Trash2, Edit2, X, Calendar, Shield, Users, DollarSign, Filter, ChevronRight, TrendingUp, Map
+  Trophy, MapPin, Clock, Plus, Loader2, Trash2, Edit2, X, Calendar, Shield, Users, DollarSign, Filter, ChevronRight, TrendingUp, Map, Check
 } from 'lucide-react';
 import { getFechasLiga, saveFechaLiga, deleteFechaLiga, getSocios, getPagosPartidos, savePagoPartido, deletePagoPartido } from '../services/dataService';
 import { FechaLiga, Category, Socio, PagoPartido } from '../types';
@@ -284,31 +284,64 @@ const FechaLigaView = ({ isOwner }: { isOwner: boolean }) => {
                 No hay socios activos en esta categoría
               </div>
             ) : (
-              filteredSocios.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => {
-                    setSelectedSocio(s);
-                    setPaymentData({
-                      ...paymentData,
-                      rival: fechas.find(f => f.categoria === s.categoria)?.rival || ''
-                    });
-                    setIsPaymentModalOpen(true);
-                  }}
-                  className="flex items-center justify-between p-5 bg-white rounded-3xl border border-slate-100 hover:border-primary/30 hover:shadow-xl transition-all group text-left"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                      <Users size={24} />
+              filteredSocios.map(s => {
+                const isSelected = selectedSocio?.id === s.id;
+                const hasPaymentToday = pagosPartidos.some(p => p.socioId === s.id && p.fecha === paymentData.fecha);
+                
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setSelectedSocio(s);
+                      setPaymentData({
+                        ...paymentData,
+                        rival: fechas.find(f => f.categoria === s.categoria)?.rival || ''
+                      });
+                      setIsPaymentModalOpen(true);
+                    }}
+                    className={`flex items-center justify-between p-5 rounded-3xl border transition-all group text-left ${
+                      isSelected 
+                        ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-100' 
+                        : hasPaymentToday
+                          ? 'bg-slate-50/50 border-slate-200 opacity-80'
+                          : 'bg-white border-slate-100 hover:border-primary/30 hover:shadow-xl'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
+                        isSelected 
+                          ? 'bg-emerald-500 text-white' 
+                          : hasPaymentToday
+                            ? 'bg-emerald-100 text-emerald-600'
+                            : 'bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary'
+                      }`}>
+                        {isSelected || hasPaymentToday ? <Check size={24} /> : <Users size={24} />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className={`font-black uppercase tracking-tight ${isSelected ? 'text-emerald-700' : 'text-slate-900'}`}>
+                            {s.nombre} {s.apellido}
+                          </h4>
+                          {isSelected && (
+                            <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
+                              Seleccionado
+                            </span>
+                          )}
+                          {hasPaymentToday && !isSelected && (
+                            <span className="bg-emerald-100 text-emerald-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                              Registrado
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-emerald-600/60' : 'text-slate-400'}`}>
+                          {s.categoria}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-black text-slate-900 uppercase tracking-tight">{s.nombre} {s.apellido}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.categoria}</p>
-                    </div>
-                  </div>
-                  <ChevronRight size={20} className="text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                </button>
-              ))
+                    <ChevronRight size={20} className={`${isSelected ? 'text-emerald-500' : 'text-slate-300'} group-hover:text-primary group-hover:translate-x-1 transition-all`} />
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
