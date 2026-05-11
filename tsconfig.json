@@ -3,19 +3,16 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
+    "ignoreDeprecations": "5.0",
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "baseUrl": ".",
-    "paths": {
-      "*": ["*"]
-    }
+    "lib": ["DOM", "DOM.Iterable", "ESNext"]
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }
