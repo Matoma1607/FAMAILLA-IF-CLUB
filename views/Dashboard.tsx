@@ -62,6 +62,8 @@ const Dashboard = () => {
         
         // Calcular deudores del mes actual
         const listaDeudores = socios.filter(s => {
+          if (s.esBecado) return false; // Alumnos becados no son deudores
+          
           const pago = pagos.find(p => 
             String(p.socioId).trim() === String(s.id).trim() && 
             String(p.mes).trim() === String(mesActual).trim() && 

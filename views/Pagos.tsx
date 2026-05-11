@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  CreditCard, Search, Plus, Loader2, X, Trash2, Edit2, DollarSign, Wallet, ArrowRightLeft, Check, Clock
+  CreditCard, Search, Plus, Loader2, X, Trash2, Edit2, DollarSign, Wallet, ArrowRightLeft, Check, Clock, ShieldCheck
 } from 'lucide-react';
 import { getPagos, getSocios, registrarPago, updateEstadoPago, deletePago } from '../services/dataService';
 import { Pago, Socio } from '../types';
@@ -377,8 +377,15 @@ const Pagos = () => {
                 const socio = socios.find(s => String(s.id) === String(p.socioId));
                 return (
                   <tr key={p.ids.join('-')} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-8 py-5 font-bold text-slate-900">
-                      {socio ? `${socio.nombre} ${socio.apellido}` : (p.nombreSocio || `ID: ${p.socioId}`)}
+                    <td className="px-8 py-5 font-bold text-slate-900 border-l-4 border-l-transparent">
+                      <div className="flex flex-col">
+                        <span>{socio ? `${socio.nombre} ${socio.apellido}` : (p.nombreSocio || `ID: ${p.socioId}`)}</span>
+                        {socio?.esBecado && (
+                          <span className="bg-amber-100 text-amber-700 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest w-fit mt-1">
+                            BECADO
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex flex-col">
@@ -477,9 +484,19 @@ const Pagos = () => {
                     onChange={e => setEditingPago({...editingPago, socioId: e.target.value})}
                   >
                     <option value="">Seleccionar Alumno...</option>
-                    {socios.map(s => <option key={s.id} value={s.id}>{s.nombre} {s.apellido}</option>)}
+                    {socios.map(s => <option key={s.id} value={s.id}>{s.nombre} {s.apellido} {s.esBecado ? '(BECADO)' : ''}</option>)}
                   </select>
                 </div>
+
+                {editingPago?.socioId && socios.find(s => String(s.id) === String(editingPago.socioId))?.esBecado && !editingPago.id && (
+                  <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-start space-x-3">
+                    <ShieldCheck className="text-amber-500 shrink-0 mt-0.5" size={16} />
+                    <div>
+                      <p className="text-[10px] font-black text-amber-800 uppercase leading-none mb-1">Este alumno posee BECA</p>
+                      <p className="text-[9px] text-amber-600 font-medium leading-tight">No se le deberían cobrar cuotas mensuales ni inscripción habitualmente.</p>
+                    </div>
+                  </div>
+                )}
 
                 {!editingPago?.id && (
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
