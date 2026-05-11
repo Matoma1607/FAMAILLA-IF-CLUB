@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, Check, Clock, Calendar
+  Search, Plus, X, Edit2, Trash2, AlertCircle, Loader2, MessageCircle, RefreshCw, Check, Clock, Calendar, ShieldCheck
 } from 'lucide-react';
 import { getSocios, saveSocio, deleteSocio, getPagos, registrarPago, deletePago, getAsistencia, deleteAsistencia } from '../services/dataService';
 import { Socio, Category, Pago, Asistencia } from '../types';
@@ -62,8 +62,8 @@ const Socios = () => {
       const savedSocio = await saveSocio(editingSocio);
       const socioId = savedSocio?.id; 
 
-      if (isNew && socioId) {
-        // Registrar deuda PENDIENTE si hay montos definidos
+      if (isNew && socioId && !editingSocio?.esBecado) {
+        // Registrar deuda PENDIENTE si hay montos definidos y no es becado
         const promises = [];
         if (initialPayments.inscripcion > 0) {
           promises.push(registrarPago({
@@ -154,6 +154,8 @@ const Socios = () => {
   };
 
   const getDetailedStatus = (socioId: string) => {
+    const socio = socios.find(s => s.id === socioId);
+    
     const pagosSocioMes = pagos.filter(p => 
       String(p.socioId).trim() === String(socioId).trim() && 
       String(p.mes).trim() === String(mesActual).trim() && 
@@ -161,17 +163,19 @@ const Socios = () => {
     );
 
     const status = {
-      inscripcion: pagosSocioMes.find(p => p.tipo === 'INSCRIPCION')?.estado || 'N/A',
-      mensual: pagosSocioMes.find(p => p.tipo === 'MENSUAL')?.estado || (pagosSocioMes.length === 0 ? 'PENDIENTE' : 'N/A'),
-      seguro: pagosSocioMes.find(p => p.tipo === 'SEGURO')?.estado || 'N/A'
+      inscripcion: socio?.esBecado ? 'BECADO' : (pagosSocioMes.find(p => p.tipo === 'INSCRIPCION')?.estado || 'N/A'),
+      mensual: socio?.esBecado ? 'BECADO' : (pagosSocioMes.find(p => p.tipo === 'MENSUAL')?.estado || (pagosSocioMes.length === 0 ? 'PENDIENTE' : 'N/A')),
+      seguro: socio?.esBecado ? 'BECADO' : (pagosSocioMes.find(p => p.tipo === 'SEGURO')?.estado || 'N/A')
     };
 
     return status;
   };
 
   const getPaymentStatus = (socioId: string) => {
+    const socio = socios.find(s => s.id === socioId);
+    if (socio?.esBecado) return true;
+    
     const status = getDetailedStatus(socioId);
-    // Si mensual es PENDIENTE o no existe, está vencido
     return status.mensual === 'PAGADO';
   };
 
@@ -290,23 +294,28 @@ const Socios = () => {
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex flex-col space-y-1">
-                        <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit ${isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                          {isPaid ? <Check size={14} strokeWidth={3} /> : <Clock size={14} strokeWidth={3} />}
-                          <span>{isPaid ? 'AL DÍA' : 'VENCIDO'}</span>
-                        </div>
-                        <div className="flex space-x-1 mt-1">
-                          {(() => {
+                         <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit ${socio.esBecado ? 'bg-amber-50 text-amber-600' : (isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600')}`}>
+                           {socio.esBecado ? <ShieldCheck size={14} strokeWidth={3} /> : (isPaid ? <Check size={14} strokeWidth={3} /> : <Clock size={14} strokeWidth={3} />)}
+                           <span>{socio.esBecado ? 'BECADO' : (isPaid ? 'AL DÍA' : 'VENCIDO')}</span>
+                         </div>
+                    <div className="flex space-x-1 mt-1 items-center">
+                      {socio.esBecado && (
+                        <span className="bg-amber-100 text-amber-700 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest mr-2">
+                          BECADO
+                        </span>
+                      )}
+                      {(() => {
                             const status = getDetailedStatus(socio.id);
                             return (
                               <>
                                 {status.inscripcion !== 'N/A' && (
-                                  <span title="Inscripción" className={`w-2 h-2 rounded-full ${status.inscripcion === 'PAGADO' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                  <span title="Inscripción" className={`w-2 h-2 rounded-full ${status.inscripcion === 'PAGADO' ? 'bg-emerald-400' : (status.inscripcion === 'BECADO' ? 'bg-amber-400' : 'bg-rose-400')}`} />
                                 )}
                                 {status.mensual !== 'N/A' && (
-                                  <span title="Mensual" className={`w-2 h-2 rounded-full ${status.mensual === 'PAGADO' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                  <span title="Mensual" className={`w-2 h-2 rounded-full ${status.mensual === 'PAGADO' ? 'bg-emerald-400' : (status.mensual === 'BECADO' ? 'bg-amber-400' : 'bg-rose-400')}`} />
                                 )}
                                 {status.seguro !== 'N/A' && (
-                                  <span title="Seguro" className={`w-2 h-2 rounded-full ${status.seguro === 'PAGADO' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                  <span title="Seguro" className={`w-2 h-2 rounded-full ${status.seguro === 'PAGADO' ? 'bg-emerald-400' : (status.seguro === 'BECADO' ? 'bg-amber-400' : 'bg-rose-400')}`} />
                                 )}
                               </>
                             );
@@ -406,8 +415,22 @@ const Socios = () => {
                   <input required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:border-primary transition-all text-sm" placeholder="381..." value={editingSocio?.telefonoTutor || ''} onChange={e => setEditingSocio({...editingSocio, telefonoTutor: e.target.value})} />
                 </div>
 
-                {!editingSocio?.id && (
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                <div className="pt-2 pb-1">
+                  <div className="flex items-center justify-between p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${editingSocio?.esBecado ? 'bg-amber-500' : 'bg-slate-300'}`} onClick={() => setEditingSocio({...editingSocio, esBecado: !editingSocio?.esBecado})}>
+                        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${editingSocio?.esBecado ? 'translate-x-4' : ''}`} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-800">¿Es alumno becado?</p>
+                        <p className="text-[8px] font-bold text-amber-600/70 uppercase">No aplicarán cobros iniciales</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {!editingSocio?.id && !editingSocio?.esBecado && (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 animate-slide-down">
                     <div className="flex items-center justify-between">
                       <h4 className="text-[9px] font-black uppercase tracking-widest text-secondary">Conceptos a Cobrar</h4>
                       <span className="text-[8px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md uppercase">Se cargará como Pendiente</span>

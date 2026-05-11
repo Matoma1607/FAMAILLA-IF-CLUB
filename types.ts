@@ -18,6 +18,7 @@ export interface Socio {
   activo: boolean;
   fechaInscripcion: string;
   fechaNacimiento?: string;
+  esBecado?: boolean;
 }
 
 export interface Pago {
